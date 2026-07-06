@@ -31,3 +31,11 @@ Content-Type: application/json
     "status":"Inactive"
 }
 
+### Delete Bank account
+PATCH http://localhost:4004/odata/v4/employee/Banks/B0000001-0000-0000-0000-000000000001
+Content-Type: application/json
+
+{
+    "status":"Inactive"
+}
+
