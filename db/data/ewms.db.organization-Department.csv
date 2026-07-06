@@ -1,0 +1,5 @@
+ID,departmentCode,departmentName,description,businessUnit_ID,location_ID,status
+11111111-dddd-1111-dddd-111111111111,DEP0001,Software Development,Application Development,aaaaaaaa-1111-1111-1111-111111111111,11111111-aaaa-bbbb-cccc-111111111111,Active
+22222222-dddd-2222-dddd-222222222222,DEP0002,Quality Assurance,Testing Team,aaaaaaaa-1111-1111-1111-111111111111,11111111-aaaa-bbbb-cccc-111111111111,Active
+33333333-dddd-3333-dddd-333333333333,DEP0003,Infrastructure,Infrastructure Support,bbbbbbbb-2222-2222-2222-222222222222,22222222-aaaa-bbbb-cccc-222222222222,Active
+44444444-dddd-4444-dddd-444444444444,DEP0004,Human Resources,HR Operations,cccccccc-3333-3333-3333-333333333333,33333333-aaaa-bbbb-cccc-333333333333,Active

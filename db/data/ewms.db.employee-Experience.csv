@@ -1,0 +1,11 @@
+ID,employee_ID,companyName,designation,employmentType,joiningDate,relievingDate,lastSalary,location,reasonForLeaving,remarks,status
+X0000001-0000-0000-0000-000000000001,10000000-0000-0000-0000-000000000001,Tata Consultancy Services,Software Engineer,Permanent,2020-07-01,2022-12-31,450000,Hyderabad,Career Growth,Completed Projects,Active
+X0000002-0000-0000-0000-000000000002,10000000-0000-0000-0000-000000000002,Infosys,System Engineer,Permanent,2019-06-15,2023-01-20,520000,Bangalore,Better Opportunity,Good Performance,Active
+X0000003-0000-0000-0000-000000000003,10000000-0000-0000-0000-000000000003,Wipro,Senior Developer,Permanent,2018-05-10,2021-11-30,600000,Chennai,Relocation,Project Completed,Active
+X0000004-0000-0000-0000-000000000004,10000000-0000-0000-0000-000000000004,Capgemini,Consultant,Permanent,2017-04-01,2022-08-15,680000,Pune,Career Growth,Excellent Work,Active
+X0000005-0000-0000-0000-000000000005,10000000-0000-0000-0000-000000000005,Accenture,Technology Analyst,Permanent,2021-01-05,2024-03-31,720000,Hyderabad,Higher Studies,Returned After Masters,Active
+X0000006-0000-0000-0000-000000000006,10000000-0000-0000-0000-000000000006,HCL Technologies,Software Engineer,Permanent,2018-08-20,2021-12-31,500000,Noida,Career Growth,Team Lead Experience,Active
+X0000007-0000-0000-0000-000000000007,10000000-0000-0000-0000-000000000007,Cognizant,Programmer Analyst,Permanent,2019-02-01,2022-09-30,470000,Chennai,Better Package,Cloud Projects,Active
+X0000008-0000-0000-0000-000000000008,10000000-0000-0000-0000-000000000008,IBM India,Application Developer,Permanent,2020-03-15,2023-06-30,650000,Bangalore,Project Change,International Project,Active
+X0000009-0000-0000-0000-000000000009,10000000-0000-0000-0000-000000000009,Tech Mahindra,Software Engineer,Permanent,2017-09-10,2022-10-15,560000,Hyderabad,Career Advancement,Java Developer,Active
+X0000010-0000-0000-0000-000000000010,10000000-0000-0000-0000-000000000010,Deloitte,Business Analyst,Permanent,2018-01-08,2023-05-31,750000,Bangalore,Managerial Role,Functional Consultant,Active

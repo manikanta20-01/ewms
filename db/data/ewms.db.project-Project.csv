@@ -1,0 +1,3 @@
+ID,projectCode,projectName,clientName,description,department_ID,plannedStartDate,plannedEndDate,actualStartDate,actualEndDate,budget,status
+11111111-ffff-1111-ffff-111111111111,PROJ0001,EWMS HRMS,Internal,Enterprise HRMS,11111111-dddd-1111-dddd-111111111111,2026-01-01,2026-12-31,2026-01-05,,2500000,Active
+22222222-ffff-2222-ffff-222222222222,PROJ0002,Payroll System,ABC Ltd,Payroll Automation,11111111-dddd-1111-dddd-111111111111,2026-02-01,2026-11-30,,,1500000,Active

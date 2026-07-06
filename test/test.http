@@ -1,0 +1,33 @@
+### Create Employee
+GET http://localhost:4004/odata/v4/employee/
+Content-Type: application/json
+
+### get Bank
+GET http://localhost:4004/odata/v4/employee/Banks
+Content-Type: application/json
+
+### Post new Bank account
+POST http://localhost:4004/odata/v4/employee/Banks/
+Content-Type: application/json
+
+{
+    "employee_ID":"10000000-0000-0000-0000-000000000001",
+    "bankName":"ICICI Bank",
+    "branchName":"Hyderabad",
+    "accountHolderName":"John Doe",
+    "accountNumber":"987654321001",
+    "accountType":"Salary",
+    "currency":"INR",
+    "ifscCode":"ICIC0000123",
+    "swiftCode":"ICICINBB",
+    "upiId":"john@icici"
+}
+
+### Delete Bank account
+PATCH http://localhost:4004/odata/v4/employee/Banks/B0000001-0000-0000-0000-000000000001
+Content-Type: application/json
+
+{
+    "status":"Inactive"
+}
+

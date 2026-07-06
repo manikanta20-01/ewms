@@ -1,0 +1,11 @@
+ID,employee_ID,qualification,degree,specialization,institution,boardUniversity,country,passingYear,percentage,cgpa,grade,remarks,status
+E0000001-0000-0000-0000-000000000001,10000000-0000-0000-0000-000000000001,Bachelor,B.Tech,Computer Science,JNTU Hyderabad,JNTUH,India,2020,82.50,8.40,A,Completed Successfully,Active
+E0000002-0000-0000-0000-000000000002,10000000-0000-0000-0000-000000000002,Master,MBA,Finance,Osmania University,OU,India,2021,79.00,8.10,A,Finance Management,Active
+E0000003-0000-0000-0000-000000000003,10000000-0000-0000-0000-000000000003,Bachelor,B.E,Information Technology,Anna University,Anna University,India,2019,84.20,8.70,A,Engineering,Active
+E0000004-0000-0000-0000-000000000004,10000000-0000-0000-0000-000000000004,Bachelor,B.Tech,Electronics,JNTU Kakinada,JNTUK,India,2018,76.80,7.80,B,Electronics,Active
+E0000005-0000-0000-0000-000000000005,10000000-0000-0000-0000-000000000005,Master,M.Tech,Artificial Intelligence,IIT Hyderabad,IIT,India,2022,91.20,9.40,A+,Research Program,Active
+E0000006-0000-0000-0000-000000000006,10000000-0000-0000-0000-000000000006,Bachelor,B.Sc,Computer Science,Andhra University,AU,India,2017,74.00,7.30,B,Science Degree,Active
+E0000007-0000-0000-0000-000000000007,10000000-0000-0000-0000-000000000007,Bachelor,BCA,Computer Applications,SV University,SVU,India,2018,80.40,8.20,A,Application Development,Active
+E0000008-0000-0000-0000-000000000008,10000000-0000-0000-0000-000000000008,Master,MCA,Software Engineering,JNTUH,JNTUH,India,2021,86.30,8.90,A,Software Development,Active
+E0000009-0000-0000-0000-000000000009,10000000-0000-0000-0000-000000000009,Bachelor,B.Com,Commerce,Delhi University,DU,India,2016,71.50,7.10,B,Commerce Background,Active
+E0000010-0000-0000-0000-000000000010,10000000-0000-0000-0000-000000000010,Master,MBA,Human Resources,IIM Bangalore,IIMB,India,2020,88.00,9.00,A,HR Management,Active

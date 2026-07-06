@@ -1,0 +1,4 @@
+ID,locationCode,locationName,city,state,country,timeZone,status,postalCode,businessUnit_ID
+11111111-aaaa-bbbb-cccc-111111111111,LOC0001,Hyderabad Office,Hyderabad,Telangana,India,Asia/Kolkata,Active,500081,aaaaaaaa-1111-1111-1111-111111111111
+22222222-aaaa-bbbb-cccc-222222222222,LOC0002,Bangalore Office,Bengaluru,Karnataka,India,Asia/Kolkata,Active,560001,bbbbbbbb-2222-2222-2222-222222222222
+33333333-aaaa-bbbb-cccc-333333333333,LOC0003,Chennai Office,Chennai,Tamil Nadu,India,Asia/Kolkata,Active,600001,cccccccc-3333-3333-3333-333333333333
