@@ -1,41 +1,126 @@
-### Create Employee
-GET http://localhost:4004/odata/v4/employee/
+### GET Employees
+GET http://localhost:4004/odata/v4/employee/Employees
 Content-Type: application/json
 
-### get Bank
-GET http://localhost:4004/odata/v4/employee/Banks
-Content-Type: application/json
+### GET with expand
+GET http://localhost:4004/odata/v4/employee/Employees?$expand=banks,educations,experiences,documents,statutoryDetails
 
-### Post new Bank account
-POST http://localhost:4004/odata/v4/employee/Banks/
+### POST Employee
+PATCH http://localhost:4004/odata/v4/employee/Employees
 Content-Type: application/json
 
 {
-    "employee_ID":"10000000-0000-0000-0000-000000000001",
+    "ID": "2647f862-950c-48a6-b490-6e65dbf04285",
+    "mobile":"9985251944"
+}
+
+### GET Banks
+GET http://localhost:4004/odata/v4/employee/Banks
+
+### Create bank account
+POST http://localhost:4004/odata/v4/employee/Banks
+Content-Type: application/json
+
+{
+    "employee_ID":"2647f862-950c-48a6-b490-6e65dbf04285",
     "bankName":"ICICI Bank",
     "branchName":"Hyderabad",
-    "accountHolderName":"John Doe",
-    "accountNumber":"987654321001",
+    "accountHolderName":"Rahul Sharma",
+    "accountNumber":"123456789012",
     "accountType":"Salary",
     "currency":"INR",
-    "ifscCode":"ICIC0000123",
+    "ifscCode":"ICIC0001234",
     "swiftCode":"ICICINBB",
-    "upiId":"john@icici"
+    "upiId":"rahul@icici"
 }
 
-### Delete Bank account
-PATCH http://localhost:4004/odata/v4/employee/Banks/B0000001-0000-0000-0000-000000000001
+### Create bank account
+PUT http://localhost:4004/odata/v4/employee/Banks
 Content-Type: application/json
 
 {
-    "status":"Inactive"
+    "employee_ID":"2647f862-950c-48a6-b490-6e65dbf04285",
+    "bankName":"ICICI Bank",
+    "branchName":"Hyderabad",
+    "accountHolderName":"Rahul Sharma",
+    "accountNumber":"123456789012",
+    "accountType":"Salary",
+    "currency":"INR",
+    "ifscCode":"ICIC0001235",
+    "swiftCode":"ICICINBB",
+    "upiId":"rahul@icici"
 }
 
-### Delete Bank account
-PATCH http://localhost:4004/odata/v4/employee/Banks/B0000001-0000-0000-0000-000000000001
+### CREATE eDUCATION
+POST http://localhost:4004/odata/v4/employee/Educations
 Content-Type: application/json
 
 {
-    "status":"Inactive"
+    "employee_ID":"2647f862-950c-48a6-b490-6e65dbf04285",
+    "qualification":"Bachelor",
+    "degree":"B.Tech",
+    "specialization":"Computer Science",
+    "institution":"JNTUH",
+    "boardUniversity":"JNTUH",
+    "country":"India",
+    "passingYear":2022,
+    "percentage":82,
+    "cgpa":8.4,
+    "grade":"A"
 }
 
+### create experence
+POST http://localhost:4004/odata/v4/employee/Experiences
+Content-Type: application/json
+
+{
+    "employee_ID":"2647f862-950c-48a6-b490-6e65dbf04285",
+    "companyName":"Infosys",
+    "designation":"Software Engineer",
+    "employmentType":"Permanent",
+    "joiningDate":"2020-01-01",
+    "relievingDate":"2023-12-31",
+    "lastSalary":650000,
+    "location":"Hyderabad",
+    "reasonForLeaving":"Career Growth"
+}
+### create Document
+POST http://localhost:4004/odata/v4/employee/Documents
+Content-Type: application/json
+
+{
+    "employee_ID":"2647f862-950c-48a6-b490-6e65dbf04285",
+    "documentType":"PAN",
+    "documentNumber":"ABCDE1234F",
+    "fileName":"pan.pdf",
+    "mimeType":"application/pdf",
+    "fileSize":250000,
+    "filePath":"/documents/pan.pdf"
+}
+
+### GET STATUTORY 
+GET http://localhost:4004/odata/v4/employee/StatutoryDetails
+
+
+### Statutory Details
+POST http://localhost:4004/odata/v4/employee/StatutoryDetails
+Content-Type: application/json
+
+{
+    "employee_ID":"2647f862-950c-48a6-b490-6e65dbf04285",
+    "uanNumber":"100000001",
+    "pfNumber":"PF100001",
+    "esiNumber":"ESI100001",
+    "panNumber":"ABCDE1234F",
+    "aadhaarNumber":"123456789012",
+    "isPFApplicable":true,
+    "isESIApplicable":true
+}
+
+### Statutory Details
+PATCH http://localhost:4004/odata/v4/employee/StatutoryDetails(651330a2-b55c-4648-914c-348d6d871e51)
+Content-Type: application/json
+
+{
+    "panNumber":"ABCDE1234U"   
+}
