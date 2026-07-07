@@ -5,6 +5,7 @@ type Status : String enum {
     Active;
     Inactive;
     Closed;
+    Pending;
 }
 
 // Gender
@@ -43,10 +44,12 @@ type ProjectStatus : String enum {
 type AttendanceStatus : String enum {
     Present;
     Absent;
+    HalfDay;
     Leave;
-    Halfday;
     Holiday;
-    WFH;
+    WeekOff;
+    WorkFromHome;
+    OnDuty;
 }
 
 type LeaveType : String enum {
@@ -155,4 +158,11 @@ type WorkMode : String enum {
     Office;
     WFH;
     Onsite;
+}
+
+type HolidayType : String enum {
+    National;
+    Festival;
+    Regional;
+    Company;
 }

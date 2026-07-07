@@ -20,3 +20,11 @@ using from './employee/document';
 using from './employee/education';
 using from './employee/experience';
 using from './employee/statutory-detail';
+
+using from './attendance/shift';
+using from './attendance/attendance';
+using from './attendance/holiday-calendar';
+using from './attendance/holiday';
+using from './attendance/overtime';
+using from './attendance/shift-assignment';
+using from './attendance/workSchedule';

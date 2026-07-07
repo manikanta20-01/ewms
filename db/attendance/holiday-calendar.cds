@@ -5,18 +5,14 @@ using {managed} from '@sap/cds/common';
 using ewms.db.common as type from '../common/types';
 using ewms.db.common as enums from '../common/enums';
 
-entity Shift : managed {
+entity HolidayCalendar : managed {
     key ID : UUID;
-    shiftCode : String(20);
+    calendarCode : String(20);
     name : type.Name100;
+    countryCode : String(3);
+    state : type.Name50;
+    year : Integer;
     description : type.Description;
-    startTime : Time;
-    endTime : Time;
-    graceInMinutes : Integer default 0;
-    graceOutMinutes : Integer default 0;
-    breakMinutes : Integer default 60;
-    worklyHours : Decimal(5, 2);
-    nightShift : Boolean default false;
     status : enums.Status default 'Active';
 }
 
