@@ -1,7 +1,7 @@
 const cds = require("@sap/cds");
 const { Company } = cds.entities("ewms.db.organization");
 
-const { exists } = require("../utils/duplicate");
+const { exists } = require("../../common/utils/duplicate");
 
 module.exports = srv => {
 

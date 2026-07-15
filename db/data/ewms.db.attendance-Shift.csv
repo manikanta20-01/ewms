@@ -1,0 +1,4 @@
+ID,shiftCode,name,description,startTime,endTime,graceInMinutes,graceOutMinutes,breakMinutes,worklyHours,nightShift,status
+20000000-0000-0000-0000-000000000001,SHIFT001,General Shift,Standard day shift,09:00:00,18:00:00,10,10,60,8.00,false,Active
+20000000-0000-0000-0000-000000000002,SHIFT002,Morning Shift,Early morning shift,06:00:00,14:00:00,5,5,30,8.00,false,Active
+20000000-0000-0000-0000-000000000003,SHIFT003,Night Shift,Overnight shift,22:00:00,06:00:00,10,10,45,8.00,true,Active

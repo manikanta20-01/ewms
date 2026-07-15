@@ -1,6 +1,6 @@
-const { required } = require("../utils/validation");
-const { generateCode } = require("../utils/code-generator");
-const { startBeforeEnd } = require("../utils/date-validation");
+const { required } = require("../../common/utils/validation");
+const { generateCode } = require("../../common/utils/code-generator");
+const { startBeforeEnd } = require("../../common/utils/date-validation");
 
 module.exports = (srv) => {
 

@@ -1,4 +1,4 @@
-using {ewms.db.employee as db} from '../db/schema';
+using {ewms.db.employee as db} from '../../db/schema';
 
 service EmployeeService {
     entity Employees as projection on db.Employee;

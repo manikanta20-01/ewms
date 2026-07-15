@@ -1,5 +1,5 @@
-const { required } = require("../utils/validation");
-const { generateCode } = require("../utils/code-generator");
+const { required } = require("../../common/utils/validation");
+const { generateCode } = require("../../common/utils/code-generator");
 
 module.exports = (srv) => {
 
@@ -20,10 +20,10 @@ module.exports = (srv) => {
 
     srv.before('DELETE', 'Departments', async (req) => {
 
-    await validateDelete(
-        req,
-        'EmployeeService.EmployeeAssignments',
-        'department_ID'
+        await validateDelete(
+            req,
+            'EmployeeService.EmployeeAssignments',
+            'department_ID'
         );
 
     });

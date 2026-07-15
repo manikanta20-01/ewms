@@ -1,6 +1,6 @@
 const cds = require("@sap/cds");
-const { exists } = require("../utils/check-reference");
-const updateHistory = require("../utils/update-history");
+const { exists } = require("../../common/utils/check-reference");
+const updateHistory = require("../../common/utils/update-history");
 
 module.exports = (srv) => {
 

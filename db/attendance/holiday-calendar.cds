@@ -9,7 +9,7 @@ entity HolidayCalendar : managed {
     key ID : UUID;
     calendarCode : String(20);
     name : type.Name100;
-    countryCode : String(3);
+    country : String(3);
     state : type.Name50;
     year : Integer;
     description : type.Description;

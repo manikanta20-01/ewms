@@ -16,7 +16,7 @@ entity Attendance : managed {
     checkIn : Time;
     checkOut : Time;
     workedHours : Decimal(5, 2);
-    breakHours : Decimal(5, 2) default 0;
+    // breakHours : Decimal(5, 2) default 0;
     lateMinutes : Integer default 0;
     earlyLeavingMinutes : Integer default 0;
     attendanceStatus : enums.AttendanceStatus;

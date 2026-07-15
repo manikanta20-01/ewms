@@ -1,4 +1,4 @@
-using { ewms.db.organization as db } from '../db/schema';
+using { ewms.db.organization as db } from '../../db/schema';
 
 service OrganizationService {
     entity Companies as projection on db.Company;

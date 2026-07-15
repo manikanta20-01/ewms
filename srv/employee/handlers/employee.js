@@ -1,8 +1,8 @@
 const cds = require('@sap/cds');
 const { SELECT } = cds.ql;
 
-const { employeeAge, futureJoining } = require('../utils/business-rules');
-const { validateDelete } = require('../utils/delete-validator');
+const { employeeAge, futureJoining } = require('../../common/utils/business-rules');
+const { validateDelete } = require('../../common/utils/delete-validator');
 
 module.exports = (srv) => {
 

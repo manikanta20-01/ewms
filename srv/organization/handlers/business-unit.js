@@ -1,5 +1,5 @@
-const { required } = require("../utils/validation");
-const { generateCode } = require("../utils/code-generator");
+const { required } = require("../../common/utils/validation");
+const { generateCode } = require("../../common/utils/code-generator");
 
 module.exports = (srv) => {
 

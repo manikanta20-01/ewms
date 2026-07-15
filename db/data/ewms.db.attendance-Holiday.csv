@@ -1,0 +1,4 @@
+ID,holidayCalendar_ID,name,holidayDate,holidayType,isOptional,isPaidHoliday,remarks,status
+40000000-0000-0000-0000-000000000001,30000000-0000-0000-0000-000000000001,Republic Day,2026-01-26,Festival,false,true,National holiday,Active
+40000000-0000-0000-0000-000000000002,30000000-0000-0000-0000-000000000001,Independence Day,2026-08-15,Festival,false,true,National holiday,Active
+40000000-0000-0000-0000-000000000003,30000000-0000-0000-0000-000000000002,New Year's Day,2026-01-01,Festival,false,true,Federal holiday,Active
