@@ -13,6 +13,7 @@ module.exports = (srv) => {
                 "OrganizationService.Locations",
                 "locationCode",
                 "LOC",
+                
                 4
             );
 
