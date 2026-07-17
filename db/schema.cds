@@ -28,3 +28,11 @@ using from './attendance/holiday';
 using from './attendance/overtime';
 using from './attendance/shift-assignment';
 using from './attendance/workSchedule';
+
+using from './leave/leave-type';
+using from './leave/leave-request';
+using from './leave/leave-policy';
+using from './leave/leave-balance';
+using from './leave/leave-approval';
+using from './leave/approval-history';
+

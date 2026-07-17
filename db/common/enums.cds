@@ -58,6 +58,7 @@ type LeaveType : String enum {
     Earned;
     Maternity;
     Paternity;
+    CompOff;
     LOP;
 }
 
@@ -67,6 +68,7 @@ type LeaveType : String enum {
  */
 
 type LeaveStatus : String enum {
+    Draft;
     Pending;
     TeamApproved;
     ProjectApproved;
@@ -75,7 +77,15 @@ type LeaveStatus : String enum {
     Cancelled;
 }
 
-
+type ApprovalDecision : String enum {
+    Pending;
+    Approved;
+    Rejected;
+}
+type HalfDayType : String enum {
+    FirstHalf;
+    SecondHalf;
+}
 /*
  * Payroll Status
  */
