@@ -1,0 +1,5 @@
+ID,leaveCode,name,description,color,isPaid,carryForward,requiresDocument,maxDaysPerRequest,status
+7a000000-0000-0000-0000-000000000001,LV0001,Casual Leave,General short-term personal time off,blue,true,false,false,3,Active
+7a000000-0000-0000-0000-000000000002,LV0002,Sick Leave,Medical time off with certificate verification,red,true,false,true,15,Active
+7a000000-0000-0000-0000-000000000003,LV0003,Earned Leave,Annual vacation accrual category,green,true,true,false,30,Active
+7a000000-0000-0000-0000-000000000004,LV0004,Leave Without Pay,Unpaid personal or emergency leave,grey,false,false,false,,Active

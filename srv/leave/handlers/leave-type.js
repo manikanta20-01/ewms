@@ -1,102 +1,138 @@
 const cds = require("@sap/cds");
 const { SELECT } = cds.ql;
+const { required } = require("../../common/utils/validation");
+const { generateCode } = require("../../common/utils/code-generator");
 
 module.exports = (srv) => {
-  // TODO:
-  const { LeaveType, LeavePolicy } = srv.entities;
+  const { LeaveType } = srv.entities;
 
-  // ==================
-  // CREATE
-  // ==================
-  srv.before("CREATE", "LeaveType", async (req) => {
+  // ============================================================
+  // CREATE - Validation & Code Generation
+  // ============================================================
+  srv.before("CREATE", "LeaveTypes", async (req) => {
     const tx = cds.transaction(req);
+    const { name, maxDaysPerRequest } = req.data;
 
-    const { leaveCode, name } = req.data;
+    // Mandatory Field Validation
+    required(req, "name", "Leave Type Name");
+    positive(req, "maxDaysPerRequest", "Maximum Days per Request");
 
-    // validate leavecode
-    if (!leaveCode) {
-      return req.error(400, "Leave code is required");
-    }
-    // Validate name
-    if (!name) {
-      return req.error(400, "Leave name is required");
-    }
-
-    // Duplicate Leave code
-    const duplicateCode = await tx.run(
-      SELECT.one.from(LeaveType).where({
-        leaveCode,
-      }),
-    );
-
-    if (duplicateCode)
-      return req.error(400, `Leave code '${leaveCode}' Already exists`);
-
-    // Duplicate leave name
-    const duplicateName = await tx.run(
-      SELECT.one.from(LeaveType).where({ name }),
-    );
-
-    if (duplicateName)
-      return req.error(400, `Leave name '${name}' Already exists`);
-  });
-  // ==================
-  // UPDATE
-  // ==================
-  srv.before("UPDATE", "LeaveType", async (req) => {
-    const { ID, leaveCode, name } = req.data;
-    const tx = cds.transaction(req);
-
-    if (leaveCode) {
-      const duplicateCode = await tx.run(
-        SELECT.one.from(LeaveType).where({
-          leaveCode,
-          "!=": ID,
-        }),
+    if (maxDaysPerRequest !== undefined && maxDaysPerRequest <= 0) {
+      return req.error(
+        400,
+        "Maximum days per request must be greater than zero.",
       );
-      if (duplicateCode)
-        return req.error(400, `Leave code ${leaveCode} Already exeists`);
     }
 
-    if (name) {
-      const duplicateName = await tx.run(
-        SELECT.one.from(LeaveType).where({
-          name,
-          "!=": ID,
-        }),
+    // Duplicate Check via absolute Database Layer String (Avoids Draft Isolation Flaws)
+    const existingType = await tx.run(
+      SELECT.one.from("ewms.db.leave.LeaveType").where({ name: name }),
+    );
+
+    if (existingType) {
+      return req.error(
+        400,
+        `Leave category '${name}' already exists in the system registry.`,
       );
-      if (duplicateName)
-        return req.error(400, `Leave name ${name} Already exists`);
     }
+
+    // Auto Code Allocation targeting the direct database table layer
+    req.data.leaveCode = await generateCode(
+      req,
+      "ewms.db.leave.LeaveType",
+      "leaveCode",
+      "LV",
+      4,
+    );
   });
-  // ==================
-  // DELETE
-  // ==================
-  srv.before("DELETE", "LeaveType", async (req) => {
+
+  // ============================================================
+  // UPDATE - Strict Modification Rules
+  // ============================================================
+  srv.before("UPDATE", "LeaveTypes", async (req) => {
     const tx = cds.transaction(req);
 
-    const policy = await tx.run(
-      SELECT.one.from(LeavePolicies).where({ leaveType_ID: ID }),
-    );
-
-    if (policy) {
-      return req.error(400, "Leave Type is used in Leave Policy.");
+    // Immutable Key Block Rule
+    if ("leaveCode" in req.data) {
+      return req.error(
+        400,
+        "Altering an active unique Leave Code configuration is prohibited.",
+      );
     }
 
-    const balance = await tx.run(
-      SELECT.one.from(LeaveBalances).where({ leaveType_ID: ID }),
-    );
-
-    if (balance) {
-      return req.error(400, "Leave Type is used in Leave Balance.");
+    if (
+      req.data.maxDaysPerRequest !== undefined &&
+      req.data.maxDaysPerRequest <= 0
+    ) {
+      return req.error(
+        400,
+        "Maximum days per request must be greater than zero.",
+      );
     }
 
-    const request = await tx.run(
-      SELECT.one.from(LeaveRequests).where({ leaveType_ID: ID }),
+    // Check for Name duplication on modification
+    if (req.data.name) {
+      const duplicateCheck = await tx.run(
+        SELECT.one
+          .from("ewms.db.leave.LeaveType")
+          .where({ name: req.data.name, ID: { "!=": req.data.ID } }),
+      );
+
+      if (duplicateCheck) {
+        return req.error(
+          400,
+          `Another leave category with the name '${req.data.name}' already exists.`,
+        );
+      }
+    }
+  });
+
+  // ============================================================
+  // DELETE - Multi-Module Dependency Guardrails
+  // ============================================================
+  srv.before("DELETE", "LeaveTypes", async (req) => {
+    const tx = cds.transaction(req);
+
+    // Defensive Check 1: Stop deletion if any active balances are bound to this category
+    const balanceLinked = await tx.run(
+      SELECT.one
+        .from("ewms.db.leave.LeaveBalance")
+        .where({ leaveType_ID: req.data.ID }),
     );
 
-    if (request) {
-      return req.error(400, "Leave Type is used in Leave Request.");
+    if (balanceLinked) {
+      return req.error(
+        400,
+        "Cannot delete Leave Type. Active Employee Leave Balances are dependent on this configuration.",
+      );
+    }
+
+    // Defensive Check 2: Stop deletion if any operational rules exist
+    const policyLinked = await tx.run(
+      SELECT.one
+        .from("ewms.db.leave.LeavePolicy")
+        .where({ leaveType_ID: req.data.ID }),
+    );
+
+    if (policyLinked) {
+      return req.error(
+        400,
+        "Cannot delete Leave Type. Active Leave Policies are dependent on this configuration.",
+      );
+    }
+
+    // Defensive Check 3: Stop deletion if historical leave requests exist
+    const requestsLinked = await tx.run(
+      SELECT.one
+        .from("ewms.db.leave.LeaveRequest")
+        .where({ leaveType_ID: req.data.ID }),
+    );
+
+    if (requestsLinked) {
+      return req.error(
+        400,
+        "Cannot delete Leave Type. Historical Leave Request records are bound to this configuration.",
+      );
     }
   });
 };
