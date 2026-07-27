@@ -96,6 +96,36 @@ type PayrollStatus : String enum {
     Paid;
 }
 
+type SalaryComponentType : String enum {
+    Earning;
+    Deduction;
+}
+
+// Calculation Type
+type CalculationType : String enum {
+    Fixed;
+    Percentage;
+    Formula;
+}
+
+// Payroll Action Types
+type PayrollAction : String enum {
+    Created;
+    Processed;
+    Approved;
+    Published;
+    Cancelled;
+    Reprocessed;
+}
+
+// Payroll Process Status
+type ProcessStatus : String enum {
+    Pending;
+    Processed;
+    Approved;
+    Rejected;
+    Published;
+}
 
 /*
  * Asset Status

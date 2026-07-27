@@ -287,9 +287,6 @@ Status
 | Attendance | ✅ |
 | Leave | 🚧 |
 | Payroll | ⏳ |
-| Performance | ⏳ |
-| Assets | ⏳ |
-| Recruitment | ⏳ |
 | Security | ⏳ |
 | Analytics | ⏳ |
 

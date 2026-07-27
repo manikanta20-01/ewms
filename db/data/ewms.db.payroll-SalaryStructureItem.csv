@@ -1,0 +1,3 @@
+ID;salaryStructure_ID;salaryComponent_ID;amount;percentage
+i0000000-0000-0000-0000-000000000001;struct-100;comp-basic;0;50
+i0000000-0000-0000-0000-000000000002;struct-100;comp-hra;0;20

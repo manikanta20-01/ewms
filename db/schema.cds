@@ -36,3 +36,12 @@ using from './leave/leave-balance';
 using from './leave/leave-approval';
 using from './leave/approval-history';
 
+using from './payroll/salary-component';
+using from './payroll/salary-structure';
+using from './payroll/salary-structure-item';
+using from './payroll/employee-salary';
+using from './payroll/payroll-period';
+using from './payroll/payroll-process';
+using from './payroll/payroll-detail';
+using from './payroll/payslip';
+using from './payroll/payroll-history';

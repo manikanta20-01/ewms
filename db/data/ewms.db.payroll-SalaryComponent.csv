@@ -1,0 +1,10 @@
+ID,componentCode,componentName,componentType,calculationType,taxable,statutory,displayOrder,status
+8a000000-0000-0000-0000-000000000001,BASIC,Basic Salary,Earning,Percentage,true,false,1,Active
+8a000000-0000-0000-0000-000000000002,HRA,House Rent Allowance,Earning,Percentage,true,false,2,Active
+8a000000-0000-0000-0000-000000000003,DA,Dearness Allowance,Earning,Percentage,true,false,3,Active
+8a000000-0000-0000-0000-000000000004,SA,Special Allowance,Earning,Fixed,true,false,4,Active
+8a000000-0000-0000-0000-000000000005,MA,Medical Allowance,Earning,Fixed,true,false,5,Active
+8a000000-0000-0000-0000-000000000006,PF,Provident Fund,Deduction,Percentage,false,true,6,Active
+8a000000-0000-0000-0000-000000000007,PT,Professional Tax,Deduction,Fixed,false,true,7,Active
+8a000000-0000-0000-0000-000000000008,TDS,Income Tax / TDS,Deduction,Fixed,false,true,8,Active
+

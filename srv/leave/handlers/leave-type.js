@@ -1,6 +1,6 @@
 const cds = require("@sap/cds");
 const { SELECT } = cds.ql;
-const { required } = require("../../common/utils/validation");
+const { required, positive } = require("../../common/utils/validation");
 const { generateCode } = require("../../common/utils/code-generator");
 
 module.exports = (srv) => {

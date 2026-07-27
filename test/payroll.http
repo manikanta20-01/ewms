@@ -1,0 +1,119 @@
+### ===================================================================
+### SPRINT 8 PAYROLL - END-TO-END VERIFICATION & TEST SUITE
+### ===================================================================
+
+@baseUrl = http://localhost:4004/odata/v4/payroll
+@periodId = 8e000000-0000-0000-0000-000000000002
+
+### -------------------------------------------------------------------
+### TEST 1: Read Master Data & Setup
+### -------------------------------------------------------------------
+
+### 1.1 Read Active Salary Components
+GET {{baseUrl}}/SalaryComponents
+Content-Type: application/json
+
+### 1.2 Read Salary Structures with Expanded Line Items
+GET {{baseUrl}}/SalaryStructures?$expand=items($expand=salaryComponent)
+Content-Type: application/json
+
+### 1.3 Read Active Payroll Periods
+GET {{baseUrl}}/PayrollPeriods
+Content-Type: application/json
+
+
+### -------------------------------------------------------------------
+### TEST 2: Validate Data Integrity & Guardrails (Negative Tests)
+### -------------------------------------------------------------------
+
+### 2.1 Test Duplicate Component Code Validation (Should Fail: 400)
+POST {{baseUrl}}/SalaryComponents
+Content-Type: application/json
+
+{
+  "componentCode": "BASIC PAY",
+  "componentName": "Basic Salary Duplicate",
+  "componentType": "Earning",
+  "calculationType": "Percentage"
+}
+
+### 2.2 Test Negative CTC Validation (Should Fail: 400)
+POST {{baseUrl}}/EmployeeSalaries
+Content-Type: application/json
+
+{
+  "employee_ID": "10000000-0000-0000-0000-000000000001",
+  "salaryStructure_ID": "8b000000-0000-0000-0000-000000000001",
+  "monthlyCTC": 100000.00,
+  "effectiveFrom": "2026-07-01"
+}
+
+
+### -------------------------------------------------------------------
+### TEST 3: Core Payroll Engine Trigger (ProcessPayroll)
+### -------------------------------------------------------------------
+
+### 3.1 Calculate Batch Payroll for Period PAY202607
+POST {{baseUrl}}/PayrollPeriods('{{periodId}}')/PayrollService.ProcessPayroll
+Content-Type: application/json
+
+{
+  "otRateMultiplier": 1.50
+}
+
+### 3.2 Verify Calculated Process Headers & Prorated Line Items
+GET {{baseUrl}}/PayrollProcesses?$filter=payrollPeriod_ID eq {{periodId}}&$expand=employee,details($expand=salaryComponent)
+Content-Type: application/json
+
+
+### -------------------------------------------------------------------
+### TEST 4: Single Record Recalculation & Approval Flow
+### -------------------------------------------------------------------
+
+### 4.1 Recalculate Individual Record
+POST {{baseUrl}}/PayrollProcesses('8e000000-0000-0000-0000-000000000001')/PayrollService.RecalculatePayroll
+Content-Type: application/json
+
+{}
+
+### 4.2 Approve Complete Payroll Batch for July 2026
+POST {{baseUrl}}/PayrollPeriods('{{periodId}}')/PayrollService.ApprovePayrollBatch
+Content-Type: application/json
+
+{}
+
+### 4.3 Verify Generated Payslip Metadata
+GET {{baseUrl}}/Payslips?$expand=payrollProcess($expand=employee)
+Content-Type: application/json
+
+
+### -------------------------------------------------------------------
+### TEST 5: Lock Period & Audit Trail
+### -------------------------------------------------------------------
+
+### 5.1 Lock Payroll Period (Prevent Modifications)
+POST {{baseUrl}}/PayrollPeriods('{{periodId}}')/PayrollService.LockPayroll
+Content-Type: application/json
+
+{}
+
+### 5.2 Attempt Execution on Locked Period (Should Fail: 400)
+
+### 1. Unlock Payroll Period
+POST {{baseUrl}}/PayrollPeriods('8e000000-0000-0000-0000-000000000002')/PayrollService.UnlockPayroll
+Content-Type: application/json
+
+{}
+
+### 1. Process Payroll for Open Period
+POST http://localhost:4004/odata/v4/payroll/PayrollPeriods('8e000000-0000-0000-0000-000000000002')/PayrollService.ProcessPayroll
+Content-Type: application/json
+
+{
+  "otRateMultiplier": 1.50
+}
+
+
+### 5.3 Read Immutable Audit Log
+GET {{baseUrl}}/PayrollHistories?$orderby=performedOn desc
+Content-Type: application/json

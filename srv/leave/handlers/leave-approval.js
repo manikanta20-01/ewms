@@ -31,7 +31,7 @@ module.exports = (srv) => {
     const approverExists = await tx.run(
       SELECT.one
         .from("ewms.db.employee.Employee")
-        .where({ ID: approver_ID, status: "Active" }),
+        .where({ ID: approver_ID, status: true }),
     );
     if (!approverExists)
       return req.error(
