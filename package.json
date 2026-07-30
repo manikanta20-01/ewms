@@ -2,13 +2,115 @@
   "name": "ewms",
   "version": "1.0.0",
   "dependencies": {
-    "@sap/cds": "^9"
+    "@sap/cds": "^8",
+    "@sap/xssec": "^4",
+    "express": "^4",
+    "hdb": "^0.19.9"
   },
   "devDependencies": {
-    "@cap-js/sqlite": "^2.4"
+    "sqlite3": "^5"
   },
   "scripts": {
-    "start": "cds serve"
+    "start": "cds-serve",
+    "watch": "cds watch"
   },
-  "private": true
+  "cds": {
+    "requires": {
+      "outbox": false,
+      "db": {
+        "kind": "sqlite",
+        "credentials": {
+          "url": "db.sqlite"
+        }
+      },
+      "auth": {
+        "kind": "mocked",
+        "restrict_all_services": true,
+        "users": {
+          "sysadmin": {
+            "roles": [
+              "SystemAdmin"
+            ],
+            "attr": {
+              "employeeId": "10000000-0000-0000-0000-000000000001",
+              "departmentId": "11111111-dddd-1111-dddd-111111111111"
+            }
+          },
+          "hrperson": {
+            "roles": [
+              "HRAdmin"
+            ],
+            "attr": {
+              "employeeId": "10000000-0000-0000-0000-000000000002",
+              "departmentId": "11111111-dddd-1111-dddd-111111111111"
+            }
+          },
+          "hrlead": {
+            "roles": [
+              "HRExecutive"
+            ],
+            "attr": {
+              "employeeId": "10000000-0000-0000-0000-000000000005",
+              "departmentId": "44444444-dddd-4444-dddd-444444444444"
+            }
+          },
+          "mgrdept": {
+            "roles": [
+              "DepartmentManager"
+            ],
+            "attr": {
+              "employeeId": "10000000-0000-0000-0000-000000000004",
+              "departmentId": "11111111-dddd-1111-dddd-111111111111"
+            }
+          },
+          "mgrproj": {
+            "roles": [
+              "ProjectManager"
+            ],
+            "attr": {
+              "employeeId": "10000000-0000-0000-0000-000000000003",
+              "departmentId": "22222222-dddd-2222-dddd-222222222222"
+            }
+          },
+          "payexec": {
+            "roles": [
+              "PayrollExecutive"
+            ],
+            "attr": {
+              "employeeId": "10000000-0000-0000-0000-000000000006",
+              "departmentId": "11111111-dddd-1111-dddd-111111111111"
+            }
+          },
+          "finmgr": {
+            "roles": [
+              "FinanceManager"
+            ],
+            "attr": {
+              "employeeId": "10000000-0000-0000-0000-000000000002",
+              "departmentId": "11111111-dddd-1111-dddd-111111111111"
+            }
+          },
+          "empjohn": {
+            "roles": [
+              "Employee"
+            ],
+            "attr": {
+              "employeeId": "10000000-0000-0000-0000-000000000001",
+              "departmentId": "11111111-dddd-1111-dddd-111111111111"
+            }
+          }
+        }
+      }
+    },
+    "[production]": {
+      "requires": {
+        "db": {
+          "kind": "hana"
+        },
+        "auth": {
+          "kind": "xsuaa"
+        }
+      }
+    }
+  }
 }

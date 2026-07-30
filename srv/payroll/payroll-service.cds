@@ -12,27 +12,34 @@ service PayrollService {
     // -----------------------------------------------------------------
     // Transactional Projections & Enterprise Workflow Actions
     // -----------------------------------------------------------------
-    entity PayrollPeriods as projection on db.PayrollPeriod actions {
-        // Core Payroll Engine Trigger (Batch Run with LOP & OT)
+       entity PayrollPeriods as projection on db.PayrollPeriod actions {
+        @(requires: ['PayrollExecutive', 'SystemAdmin'])
         action ProcessPayroll(otRateMultiplier : Decimal(3,2)) returns String;
-        
-        // Batch Approval for all calculated records in period
+
+        @(requires: ['FinanceManager', 'SystemAdmin'])
         action ApprovePayrollBatch() returns String;
-        
-        // Lock and Unlock Period Safeguards
+
+        @(requires: ['FinanceManager', 'SystemAdmin'])
         action LockPayroll() returns String;
+
+        @(requires: ['SystemAdmin'])
         action UnlockPayroll() returns String;
     };
+    
 
     entity PayrollProcesses as projection on db.PayrollProcess actions {
         // Individual Exception Recalculation
+        @(requires: ['PayrollExecutive', 'SystemAdmin'])
         action RecalculatePayroll() returns String;
+
+        @(requires: ['FinanceManager', 'SystemAdmin'])
         action RejectPayroll(reason : String) returns String;
     };
 
     entity PayrollDetails as projection on db.PayrollDetail;
 
     entity Payslips as projection on db.Payslip actions {
+        @(requires: ['HRAdmin', 'SystemAdmin'])
         action PublishPayslip() returns String;
     };
 

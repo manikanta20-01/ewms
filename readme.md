@@ -4,6 +4,28 @@
 
 ---
 
+Sprint 1 Foundation ✅
+Sprint 2 Organization ✅
+Sprint 3 Project & Team ✅
+Sprint 4 Employee Core ✅
+Sprint 5 Employee Details ✅
+Sprint 6 Attendance ✅
+Sprint 7 Leave ✅
+Sprint 8 Payroll ✅
+Sprint 9 Security & Authorization ⏳
+
+---
+
+Sprint 10 Workflow & Approval Engine
+Sprint 11 Notifications
+Sprint 12 Dashboard & Analytics
+Sprint 13 Reports & Export
+Sprint 14 Document Management
+Sprint 15 Background Jobs
+Sprint 16 External Integrations
+Sprint 17 SAP Fiori/UI5 Applications
+Sprint 18 Production Readiness
+
 # Overview
 
 EWMS is a full-stack enterprise HRMS solution designed to manage an organization's workforce throughout the employee lifecycle.
@@ -22,16 +44,16 @@ The project is developed sprint-by-sprint to ensure each module is complete and 
 
 # Technology Stack
 
-| Layer | Technology |
-|--------|------------|
-| Backend | SAP CAP (Node.js) |
-| Database (Development) | SQLite |
-| Database (Production) | SAP HANA Cloud |
-| UI | SAP Fiori Elements |
-| Platform | SAP Business Technology Platform (BTP) |
-| Authentication | XSUAA (Planned) |
-| Deployment | Cloud Foundry |
-| Testing | REST Client (.http), OData V4 |
+| Layer                  | Technology                             |
+| ---------------------- | -------------------------------------- |
+| Backend                | SAP CAP (Node.js)                      |
+| Database (Development) | SQLite                                 |
+| Database (Production)  | SAP HANA Cloud                         |
+| UI                     | SAP Fiori Elements                     |
+| Platform               | SAP Business Technology Platform (BTP) |
+| Authentication         | XSUAA (Planned)                        |
+| Deployment             | Cloud Foundry                          |
+| Testing                | REST Client (.http), OData V4          |
 
 ---
 
@@ -87,15 +109,15 @@ ewms/
 
 # Business Code Format
 
-| Entity | Format |
-|---------|---------|
-| Company | COMP0001 |
-| Business Unit | BU0001 |
-| Department | DEP0001 |
-| Project | PROJ0001 |
-| Team | TEAM0001 |
-| Employee | EMP000001 |
-| Leave | LV000001 |
+| Entity        | Format    |
+| ------------- | --------- |
+| Company       | COMP0001  |
+| Business Unit | BU0001    |
+| Department    | DEP0001   |
+| Project       | PROJ0001  |
+| Team          | TEAM0001  |
+| Employee      | EMP000001 |
+| Leave         | LV000001  |
 
 ---
 
@@ -276,19 +298,19 @@ Status
 
 # Current Modules
 
-| Module | Status |
-|---------|--------|
-| Common | ✅ |
-| Organization | ✅ |
-| Project | ✅ |
-| Team | ✅ |
-| Employee | ✅ |
-| Employee Profile | ✅ |
-| Attendance | ✅ |
-| Leave | 🚧 |
-| Payroll | ⏳ |
-| Security | ⏳ |
-| Analytics | ⏳ |
+| Module           | Status |
+| ---------------- | ------ |
+| Common           | ✅     |
+| Organization     | ✅     |
+| Project          | ✅     |
+| Team             | ✅     |
+| Employee         | ✅     |
+| Employee Profile | ✅     |
+| Attendance       | ✅     |
+| Leave            | 🚧     |
+| Payroll          | ⏳     |
+| Security         | ⏳     |
+| Analytics        | ⏳     |
 
 ---
 

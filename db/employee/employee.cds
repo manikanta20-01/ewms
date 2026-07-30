@@ -10,6 +10,7 @@ using {ewms.db.employee.Education} from  './education';
 using {ewms.db.employee.Document} from  './document';
 using {ewms.db.employee.Experience} from  './experience';
 using {ewms.db.employee.StatutoryDetail} from  './statutory-detail';
+using {ewms.db.employee.EmployeeAssignment} from './employee-assignment';
 
 entity Employee : managed {
 
@@ -83,4 +84,6 @@ entity Employee : managed {
 
     statutoryDetails : Composition of one StatutoryDetail
         on statutoryDetails.employee = $self;
+
+    assignments : Association to many EmployeeAssignment on assignments.employee = $self;
 }

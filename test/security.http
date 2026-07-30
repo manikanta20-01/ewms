@@ -1,0 +1,325 @@
+###############################################################################
+# EWMS Enterprise Security Test Suite
+# SAP CAP OData V4
+###############################################################################
+
+@host=http://localhost:4004/odata/v4
+
+###############################################################################
+# ORGANIZATION MODULE
+###############################################################################
+
+### 1. SystemAdmin - Read Companies (200)
+GET {{host}}/organization/Companies
+Authorization: Basic sysadmin:
+
+
+### 2. HR Admin - Read Companies (200)
+GET {{host}}/organization/Companies
+Authorization: Basic hrperson:
+
+
+### 3. Employee - Read Companies (200)
+GET {{host}}/organization/Companies
+Authorization: Basic empjohn:
+
+
+### 4. Anonymous User (401)
+GET {{host}}/organization/Companies
+
+
+###############################################################################
+# EMPLOYEE MODULE
+###############################################################################
+
+GET {{host}}/employee/Employees
+Authorization: Basic sysadmin:
+
+### 5. Employee - Read Own Profile (200)
+GET {{host}}/employee/Employees?$filter=ID eq 10000000-0000-0000-0000-000000000001
+Authorization: Basic empjohn:
+
+
+### 6. Employee - Read Another Employee (403 / 404)
+GET {{host}}/employee/Employees(10000000-0000-0000-0000-000000000002)
+Authorization: Basic empjohn:
+
+
+### 7. HR Admin - Read All Employees (200)
+GET {{host}}/employee/Employees
+Authorization: Basic hrperson:
+
+
+### 8. Department Manager - Read Team Employees (200)
+GET {{host}}/employee/Employees
+Authorization: Basic mgrdept:
+
+
+### 9. Project Manager - Read Team Employees (200)
+GET {{host}}/employee/Employees
+Authorization: Basic mgrproj:
+
+
+###############################################################################
+# EMPLOYEE DOCUMENTS
+###############################################################################
+
+### 10. Employee - Read Own Documents (200)
+GET {{host}}/employee/Documents
+Authorization: Basic empjohn:
+
+
+### 11. Employee - Read Another Employee Documents (403)
+GET {{host}}/employee/Documents?$filter=employee_ID eq 10000000-0000-0000-0000-000000000002
+Authorization: Basic empjohn:
+
+
+###############################################################################
+# BANK DETAILS
+###############################################################################
+
+### 12. Employee - Read Own Bank Details (200)
+GET {{host}}/employee/Banks
+Authorization: Basic empjohn:
+
+
+### 13. Employee - Read Another Employee Bank (403)
+GET {{host}}/employee/Banks?$filter=employee_ID eq 10000000-0000-0000-0000-000000000002
+Authorization: Basic empjohn:
+
+
+###############################################################################
+# ATTENDANCE MODULE
+###############################################################################
+
+### 14. Employee - Read Own Attendance (200)
+GET {{host}}/attendance/Attendances
+Authorization: Basic empjohn:
+
+
+### 15. Department Manager - Read Attendance (200)
+GET {{host}}/attendance/Attendances
+Authorization: Basic mgrdept:
+
+
+### 16. HR Admin - Read Attendance (200)
+GET {{host}}/attendance/Attendances
+Authorization: Basic hrperson:
+
+
+###############################################################################
+# LEAVE MODULE
+###############################################################################
+
+### 17. Employee - Read Own Leave Requests (200)
+GET {{host}}/leave/LeaveRequests
+Authorization: Basic empjohn:
+
+
+### 18. Employee - Create Leave Request (201)
+POST {{host}}/leave/LeaveRequests
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{
+    "employee_ID":"10000000-0000-0000-0000-000000000001",
+    "leaveType_ID":"7a000000-0000-0000-0000-000000000001",
+    "fromDate":"2026-08-01",
+    "toDate":"2026-08-03",
+    "reason":"Vacation"
+}
+
+
+### 19. Department Manager - Read Team Leave (200)
+GET {{host}}/leave/LeaveRequests
+Authorization: Basic mgrdept:
+
+#### 20. Approval 
+PATCH {{host}}/leave/LeaveApprovals(7c000000-0000-0000-0000-000000000001)
+Authorization: Basic mgrdept:
+Content-Type: application/json
+
+{
+    "decision": "Approved",
+    "remarks": "Approved by Department Manager"
+}
+
+### LEVEL -2
+PATCH {{host}}/leave/LeaveApprovals(7c000000-0000-0000-0000-000000000002)
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{
+    "decision": "Approved",
+    "remarks": "Final approval by HR"
+}
+###############################################################################
+# PAYROLL MODULE
+###############################################################################
+
+
+### 20. Employee - Read Own Payslip (200)
+GET {{host}}/payroll/Payslips
+Authorization: Basic empjohn:
+
+
+
+### 21. Employee - Read Another Payslip (403)
+GET {{host}}/payroll/Payslips?$filter=employee_ID eq 10000000-0000-0000-0000-000000000002
+Authorization: Basic empjohn:
+
+
+###############################################################################
+# PAYROLL ACTIONS
+###############################################################################
+
+GET http://localhost:4004/odata/v4/payroll/PayrollPeriods
+Authorization: Basic sysadmin:
+###
+
+GET http://localhost:4004/odata/v4/payroll/PayrollPeriods(8e000000-0000-0000-0000-000000000002)
+Authorization: Basic payexec:
+
+###
+POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(8e000000-0000-0000-0000-000000000002)/PayrollService.ProcessPayroll
+Authorization: Basic payexec:
+Content-Type: application/json
+
+{ "otRateMultiplier": 1.5 }
+
+###
+GET http://localhost:4004/odata/v4/payroll/$metadata
+Authorization: Basic payexec:
+
+###
+GET http://localhost:4004/odata/v4/payroll/PayrollPeriods(10000000-0000-0000-0000-000000000001)
+Authorization: Basic sysadmin:
+
+### 
+POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(10000000-0000-0000-0000-000000000001)/PayrollService.ProcessPayroll
+Authorization: Basic sysadmin:
+
+
+### 23. Payroll Executive - Approve Payroll Batch (403)
+POST {{host}}/payroll/PayrollPeriods(10000000-0000-0000-0000-000000000001)/PayrollService.ApprovePayrollBatch
+Authorization: Basic payexec:
+Content-Type: application/json
+
+{}
+
+
+### 24. Finance Manager - Approve Payroll Batch (200)
+POST {{host}}/payroll/PayrollPeriods(10000000-0000-0000-0000-000000000001)/PayrollService.ApprovePayrollBatch
+Authorization: Basic finmgr:
+Content-Type: application/json
+
+{}
+
+
+### 25. Finance Manager - Lock Payroll (200)
+POST {{host}}/payroll/PayrollPeriods(10000000-0000-0000-0000-000000000001)/PayrollService.LockPayroll
+Authorization: Basic finmgr:
+Content-Type: application/json
+
+{}
+
+
+### 26. Payroll Executive - Unlock Payroll (403)
+POST {{host}}/payroll/PayrollPeriods(10000000-0000-0000-0000-000000000001)/PayrollService.UnlockPayroll
+Authorization: Basic payexec:
+Content-Type: application/json
+
+{}
+
+
+### 27. SystemAdmin - Unlock Payroll (200)
+POST {{host}}/payroll/PayrollPeriods(10000000-0000-0000-0000-000000000001)/PayrollService.UnlockPayroll
+Authorization: Basic sysadmin:
+Content-Type: application/json
+
+{}
+
+
+### 28. Payroll Executive - Recalculate Payroll (200)
+POST {{host}}/payroll/PayrollProcesses(10000000-0000-0000-0000-000000000001)/PayrollService.RecalculatePayroll
+Authorization: Basic payexec:
+Content-Type: application/json
+
+{}
+
+
+### 29. Finance Manager - Reject Payroll (200)
+POST {{host}}/payroll/PayrollProcesses(10000000-0000-0000-0000-000000000001)/PayrollService.RejectPayroll
+Authorization: Basic finmgr:
+Content-Type: application/json
+
+{}
+
+
+### 30. HR Admin - Publish Payslip (200)
+POST {{host}}/payroll/Payslips(10000000-0000-0000-0000-000000000001)/PayrollService.PublishPayslip
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{}
+
+
+### 31. Employee - Publish Payslip (403)
+POST {{host}}/payroll/Payslips(10000000-0000-0000-0000-000000000001)/PayrollService.PublishPayslip
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{}
+
+
+###############################################################################
+# SYSTEM ADMIN
+###############################################################################
+
+### 32. SystemAdmin - Read Employees (200)
+GET {{host}}/employee/Employees
+Authorization: Basic sysadmin:
+
+
+### 33. SystemAdmin - Read Payroll (200)
+GET {{host}}/payroll/PayrollProcesses
+Authorization: Basic sysadmin:
+
+
+### 34. SystemAdmin - Read Leave (200)
+GET {{host}}/leave/LeaveRequests
+Authorization: Basic sysadmin:
+
+
+### 35. SystemAdmin - Read Attendance (200)
+GET {{host}}/attendance/Attendances
+Authorization: Basic sysadmin:
+
+
+###############################################################################
+# NEGATIVE TESTS
+###############################################################################
+
+### 36. Invalid Credentials (401)
+GET {{host}}/organization/Companies
+Authorization: Basic invalid:
+
+
+### 37. Anonymous Employee API (401)
+GET {{host}}/employee/Employees
+
+
+### 38. Anonymous Payroll API (401)
+GET {{host}}/payroll/PayrollPeriods
+
+
+### 39. Anonymous Leave API (401)
+GET {{host}}/leave/LeaveRequests
+
+
+### 40. Anonymous Attendance API (401)
+GET {{host}}/attendance/Attendances
+
+###############################################################################
+# END OF FILE
+###############################################################################

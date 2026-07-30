@@ -4,13 +4,12 @@ const { required } = require("../../common/utils/validation");
 const { generateCode } = require("../../common/utils/code-generator");
 
 module.exports = (srv) => {
-  const { LeaveRequest } = srv.entities;
+  const { LeaveRequests, LeaveTypes } = srv.entities;
 
-  // // ========
-  // // CREATE
-  // // ========
+  // ============================================================
+  // CREATE - Validation & Auto-Enrichment
+  // ============================================================
   srv.before("CREATE", "LeaveRequests", async (req) => {
-    const tx = cds.transaction(req);
     const { employee_ID, leaveType_ID, fromDate, toDate } = req.data;
 
     // 1. Mandatory Fields Presence Validation
@@ -27,27 +26,29 @@ module.exports = (srv) => {
       );
     }
 
-    // 3. Direct DB Existential Integrity Lookups (Bypasses UI role locks)[cite: 1]
-    const employeeExists = await tx.run(
+    // 3. Existential Integrity Lookups
+    const employeeExists = await req.run(
       SELECT.one.from("ewms.db.employee.Employee").where({ ID: employee_ID }),
     );
-    if (!employeeExists)
+    if (!employeeExists) {
       return req.error(404, "Target Employee record does not exist.");
+    }
 
-    const leaveTypeExists = await tx.run(
+    const leaveTypeExists = await req.run(
       SELECT.one
-        .from("ewms.db.leave.LeaveType")
+        .from(LeaveTypes || "ewms.db.leave.LeaveType")
         .where({ ID: leaveType_ID, status: "Active" }),
     );
-    if (!leaveTypeExists)
+    if (!leaveTypeExists) {
       return req.error(
         404,
         "Target Leave Type record is either inactive or does not exist.",
       );
+    }
 
-    // 4. Overlap Protection Guardrail via Absolute Data Boundaries
-    const overlappingRequest = await tx.run(
-      SELECT.one.from("ewms.db.leave.LeaveRequest").where({
+    // 4. Overlap Protection Guardrail
+    const overlappingRequest = await req.run(
+      SELECT.one.from(LeaveRequests || "ewms.db.leave.LeaveRequest").where({
         employee_ID,
         status: { "!=": "Cancelled" },
         fromDate: { "<=": toDate },
@@ -75,20 +76,26 @@ module.exports = (srv) => {
     );
   });
 
-  // // ========
-  // // UPDATE
-  // // ========
+  // ============================================================
+  // UPDATE - Strict Parameter Guardrails & State Transitions
+  // ============================================================
   srv.before("UPDATE", "LeaveRequests", async (req) => {
-    const tx = cds.transaction(req);
+    const targetId = req.data.ID || req.params?.[0]?.ID || req.params?.[0];
 
-    // Fetch finalized live state record to check structural boundaries[cite: 1]
-    const currentRecord = await tx.run(
-      SELECT.one.from("ewms.db.leave.LeaveRequest").where({ ID: req.data.ID }),
+    if (!targetId) return;
+
+    // Fetch live state record from database
+    const currentRecord = await req.run(
+      SELECT.one
+        .from(LeaveRequests || "ewms.db.leave.LeaveRequest")
+        .where({ ID: targetId }),
     );
-    if (!currentRecord)
-      return req.error(404, "Target leave application record was not found.");
 
-    // Structural Freeze Rule: Block modifications to relational mapping criteria after execution transitions
+    if (!currentRecord) {
+      return req.error(404, "Target leave application record was not found.");
+    }
+
+    // Structural Freeze Rule: Block modifications to core dates/keys once transitioned
     if (
       currentRecord.status !== "Draft" &&
       currentRecord.status !== "Pending"
@@ -107,19 +114,25 @@ module.exports = (srv) => {
     }
   });
 
-  // // ========
-  // // DELETE
-  // // ========
+  // ============================================================
+  // DELETE - Decoupling Safety Checks
+  // ============================================================
   srv.before("DELETE", "LeaveRequests", async (req) => {
-    const tx = cds.transaction(req);
-    const targetRecord = await tx.run(
-      SELECT.one.from("ewms.db.leave.LeaveRequest").where({ ID: req.data.ID }),
+    const targetId = req.data?.ID || req.params?.[0]?.ID || req.params?.[0];
+
+    if (!targetId) return;
+
+    const targetRecord = await req.run(
+      SELECT.one
+        .from(LeaveRequests || "ewms.db.leave.LeaveRequest")
+        .where({ ID: targetId }),
     );
 
-    if (!targetRecord)
+    if (!targetRecord) {
       return req.error(404, "Target request reference does not exist.");
+    }
 
-    // Strict compliance boundary ledger rule
+    // Strict compliance rule: Only Drafts can be physically deleted
     if (targetRecord.status !== "Draft") {
       return req.error(
         400,

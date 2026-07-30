@@ -1,264 +1,179 @@
-const cds = require('@sap/cds');
+const cds = require("@sap/cds");
 const { SELECT } = cds.ql;
 
 module.exports = async (srv) => {
+//   const db = await cds.connect.to("db");
 
-    const db = await cds.connect.to('db');
+  const { Employee, Education } = cds.entities("ewms.db.employee");
+
+  /**
+   * CREATE
+   */
+  srv.before("CREATE", "Educations", async (req) => {
+    const tx = cds.transaction(req);
 
     const {
-        Employee,
-        Education
-    } = db.entities('ewms.db.employee');
-
-    /**
-     * CREATE
-     */
-    srv.before('CREATE', 'Educations', async (req) => {
-
-        const tx = cds.transaction(req);
-
-        const {
-            employee_ID,
-            qualification,
-            degree,
-            institution,
-            passingYear,
-            percentage,
-            cgpa
-        } = req.data;
+      employee_ID,
+      qualification,
+      degree,
+      institution,
+      passingYear,
+      percentage,
+      cgpa,
+    } = req.data;
 
-        // ==========================
-        // Mandatory Fields
-        // ==========================
+    // ==========================
+    // Mandatory Fields
+    // ==========================
 
-        if (!employee_ID)
-            req.error(400, 'Employee is required.');
+    if (!employee_ID) req.error(400, "Employee is required.");
 
-        if (!qualification)
-            req.error(400, 'Qualification is required.');
+    if (!qualification) req.error(400, "Qualification is required.");
 
-        if (!degree)
-            req.error(400, 'Degree is required.');
+    if (!degree) req.error(400, "Degree is required.");
 
-        if (!institution)
-            req.error(400, 'Institution is required.');
+    if (!institution) req.error(400, "Institution is required.");
 
-        if (!passingYear)
-            req.error(400, 'Passing Year is required.');
+    if (!passingYear) req.error(400, "Passing Year is required.");
 
-        // ==========================
-        // Employee Exists
-        // ==========================
+    // ==========================
+    // Employee Exists
+    // ==========================
 
-        const employee = await tx.run(
+    const employee = await tx.run(
+      SELECT.one.from(Employee).where({
+        ID: employee_ID,
+      }),
+    );
 
-            SELECT.one
-                .from(Employee)
-                .where({
-                    ID: employee_ID
-                })
+    if (!employee) req.error(404, "Employee not found.");
 
-        );
+    // ==========================
+    // Passing Year Validation
+    // ==========================
 
-        if (!employee)
-            req.error(404, 'Employee not found.');
+    const currentYear = new Date().getFullYear();
 
-        // ==========================
-        // Passing Year Validation
-        // ==========================
+    if (passingYear > currentYear)
+      req.error(400, "Passing Year cannot be in the future.");
 
-        const currentYear = new Date().getFullYear();
+    // ==========================
+    // Percentage Validation
+    // ==========================
 
-        if (passingYear > currentYear)
-            req.error(
-                400,
-                'Passing Year cannot be in the future.'
-            );
+    if (percentage != null && (percentage < 0 || percentage > 100)) {
+      req.error(400, "Percentage must be between 0 and 100.");
+    }
 
-        // ==========================
-        // Percentage Validation
-        // ==========================
+    // ==========================
+    // CGPA Validation
+    // ==========================
 
-        if (
-            percentage != null &&
-            (percentage < 0 || percentage > 100)
-        ) {
-            req.error(
-                400,
-                'Percentage must be between 0 and 100.'
-            );
-        }
+    if (cgpa != null && (cgpa < 0 || cgpa > 10)) {
+      req.error(400, "CGPA must be between 0 and 10.");
+    }
 
-        // ==========================
-        // CGPA Validation
-        // ==========================
+    // ==========================
+    // Duplicate Education
+    // ==========================
 
-        if (
-            cgpa != null &&
-            (cgpa < 0 || cgpa > 10)
-        ) {
-            req.error(
-                400,
-                'CGPA must be between 0 and 10.'
-            );
-        }
+    const duplicate = await tx.run(
+      SELECT.one.from(Education).where({
+        employee_ID,
 
-        // ==========================
-        // Duplicate Education
-        // ==========================
+        qualification,
 
-        const duplicate = await tx.run(
+        degree,
 
-            SELECT.one
-                .from(Education)
-                .where({
+        institution,
 
-                    employee_ID,
+        passingYear,
+      }),
+    );
 
-                    qualification,
+    if (duplicate) req.error(400, "Education record already exists.");
+  });
 
-                    degree,
+  /**
+   * UPDATE
+   */
+  srv.before("UPDATE", "Educations", async (req) => {
+    const tx = cds.transaction(req);
 
-                    institution,
+    const current = await tx.run(
+      SELECT.one.from(Education).where({
+        ID: req.data.ID,
+      }),
+    );
 
-                    passingYear
+    if (!current) req.error(404, "Education record not found.");
 
-                })
+    const passingYear = req.data.passingYear ?? current.passingYear;
 
-        );
+    const percentage = req.data.percentage ?? current.percentage;
 
-        if (duplicate)
-            req.error(
-                400,
-                'Education record already exists.'
-            );
+    const cgpa = req.data.cgpa ?? current.cgpa;
 
-    });
+    const qualification = req.data.qualification ?? current.qualification;
 
-    /**
-     * UPDATE
-     */
-    srv.before('UPDATE', 'Educations', async (req) => {
+    const degree = req.data.degree ?? current.degree;
 
-        const tx = cds.transaction(req);
+    const institution = req.data.institution ?? current.institution;
 
-        const current = await tx.run(
+    // ==========================
+    // Passing Year Validation
+    // ==========================
 
-            SELECT.one
-                .from(Education)
-                .where({
-                    ID: req.data.ID
-                })
+    const currentYear = new Date().getFullYear();
 
-        );
+    if (passingYear > currentYear)
+      req.error(400, "Passing Year cannot be in the future.");
 
-        if (!current)
-            req.error(404, 'Education record not found.');
+    // ==========================
+    // Percentage Validation
+    // ==========================
 
-        const passingYear =
-            req.data.passingYear ?? current.passingYear;
+    if (percentage != null && (percentage < 0 || percentage > 100)) {
+      req.error(400, "Percentage must be between 0 and 100.");
+    }
 
-        const percentage =
-            req.data.percentage ?? current.percentage;
+    // ==========================
+    // CGPA Validation
+    // ==========================
 
-        const cgpa =
-            req.data.cgpa ?? current.cgpa;
+    if (cgpa != null && (cgpa < 0 || cgpa > 10)) {
+      req.error(400, "CGPA must be between 0 and 10.");
+    }
 
-        const qualification =
-            req.data.qualification ?? current.qualification;
+    // ==========================
+    // Duplicate Education
+    // ==========================
 
-        const degree =
-            req.data.degree ?? current.degree;
+    const duplicate = await tx.run(
+      SELECT.one.from(Education).where({
+        employee_ID: current.employee_ID,
 
-        const institution =
-            req.data.institution ?? current.institution;
+        qualification,
 
-        // ==========================
-        // Passing Year Validation
-        // ==========================
+        degree,
 
-        const currentYear = new Date().getFullYear();
+        institution,
 
-        if (passingYear > currentYear)
-            req.error(
-                400,
-                'Passing Year cannot be in the future.'
-            );
+        passingYear,
 
-        // ==========================
-        // Percentage Validation
-        // ==========================
+        ID: {
+          "!=": current.ID,
+        },
+      }),
+    );
 
-        if (
-            percentage != null &&
-            (percentage < 0 || percentage > 100)
-        ) {
-            req.error(
-                400,
-                'Percentage must be between 0 and 100.'
-            );
-        }
+    if (duplicate) req.error(400, "Another education record already exists.");
+  });
 
-        // ==========================
-        // CGPA Validation
-        // ==========================
-
-        if (
-            cgpa != null &&
-            (cgpa < 0 || cgpa > 10)
-        ) {
-            req.error(
-                400,
-                'CGPA must be between 0 and 10.'
-            );
-        }
-
-        // ==========================
-        // Duplicate Education
-        // ==========================
-
-        const duplicate = await tx.run(
-
-            SELECT.one
-                .from(Education)
-                .where({
-
-                    employee_ID: current.employee_ID,
-
-                    qualification,
-
-                    degree,
-
-                    institution,
-
-                    passingYear,
-
-                    ID: {
-                        '!=': current.ID
-                    }
-
-                })
-
-        );
-
-        if (duplicate)
-            req.error(
-                400,
-                'Another education record already exists.'
-            );
-
-    });
-
-    /**
-     * DELETE
-     */
-    srv.before('DELETE', 'Educations', async (req) => {
-
-        req.error(
-            400,
-            'Education records cannot be deleted. Mark them Inactive.'
-        );
-
-    });
-
+  /**
+   * DELETE
+   */
+  srv.before("DELETE", "Educations", async (req) => {
+    req.error(400, "Education records cannot be deleted. Mark them Inactive.");
+  });
 };

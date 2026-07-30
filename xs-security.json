@@ -1,0 +1,38 @@
+{
+  "xsappname": "ewms",
+  "tenant-mode": "dedicated",
+  "scopes": [
+    { "name": "$XSAPPNAME.Employee", "description": "Employee" },
+    { "name": "$XSAPPNAME.HRAdmin", "description": "HR Admin" },
+    { "name": "$XSAPPNAME.HRExecutive", "description": "HR Executive" },
+    { "name": "$XSAPPNAME.DepartmentManager", "description": "Department Manager" },
+    { "name": "$XSAPPNAME.ProjectManager", "description": "Project Manager" },
+    { "name": "$XSAPPNAME.FinanceManager", "description": "Finance Manager" },
+    { "name": "$XSAPPNAME.PayrollExecutive", "description": "Payroll Executive" },
+    { "name": "$XSAPPNAME.SystemAdmin", "description": "System Admin" }
+  ],
+  "attributes": [
+    { "name": "employeeId", "description": "Internal Employee ID", "valueType": "string" },
+    { "name": "departmentId", "description": "Internal Department ID", "valueType": "string" }
+  ],
+  "role-templates": [
+    { "name": "Employee", "scope-references": ["$XSAPPNAME.Employee"], "attribute-references": ["employeeId","departmentId"] },
+    { "name": "HRAdmin", "scope-references": ["$XSAPPNAME.HRAdmin"] },
+    { "name": "HRExecutive", "scope-references": ["$XSAPPNAME.HRExecutive"], "attribute-references": ["departmentId"] },
+    { "name": "DepartmentManager", "scope-references": ["$XSAPPNAME.DepartmentManager"], "attribute-references": ["departmentId"] },
+    { "name": "ProjectManager", "scope-references": ["$XSAPPNAME.ProjectManager"] },
+    { "name": "FinanceManager", "scope-references": ["$XSAPPNAME.FinanceManager"] },
+    { "name": "PayrollExecutive", "scope-references": ["$XSAPPNAME.PayrollExecutive"] },
+    { "name": "SystemAdmin", "scope-references": ["$XSAPPNAME.SystemAdmin"] }
+  ],
+  "role-collections": [
+    { "name": "EWMS_Employee", "role-template-references": ["$XSAPPNAME.Employee"] },
+    { "name": "EWMS_HRAdmin", "role-template-references": ["$XSAPPNAME.HRAdmin"] },
+    { "name": "EWMS_HRExecutive", "role-template-references": ["$XSAPPNAME.HRExecutive"] },
+    { "name": "EWMS_DepartmentManager", "role-template-references": ["$XSAPPNAME.DepartmentManager"] },
+    { "name": "EWMS_ProjectManager", "role-template-references": ["$XSAPPNAME.ProjectManager"] },
+    { "name": "EWMS_FinanceManager", "role-template-references": ["$XSAPPNAME.FinanceManager"] },
+    { "name": "EWMS_PayrollExecutive", "role-template-references": ["$XSAPPNAME.PayrollExecutive"] },
+    { "name": "EWMS_SystemAdmin", "role-template-references": ["$XSAPPNAME.SystemAdmin"] }
+  ]
+}

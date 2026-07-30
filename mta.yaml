@@ -1,0 +1,43 @@
+_schema-version: '3.2'
+ID: ewms
+version: 1.0.0
+
+modules:
+  - name: ewms-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      buildpack: nodejs_buildpack
+    build-parameters:
+      builder: npm-ci
+    properties:
+      AUDIT_TRANSACTIONAL: true
+      EMPLOYEE_CONTEXT_TTL_MS: 300000
+    requires:
+      - name: ewms-db
+      - name: ewms-xsuaa
+      - name: ewms-ias
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+
+resources:
+  - name: ewms-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hana
+      service-plan: hdi-shared
+
+  - name: ewms-xsuaa
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+
+  - name: ewms-ias
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: identity
+      service-plan: application

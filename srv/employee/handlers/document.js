@@ -8,7 +8,7 @@ module.exports = async (srv) => {
     const {
         Employee,
         Document
-    } = db.entities('ewms.db.employee');
+    } = cds.entities('ewms.db.employee');
 
     /**
      * CREATE

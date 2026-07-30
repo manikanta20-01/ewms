@@ -1,203 +1,117 @@
-const cds = require('@sap/cds');
+const cds = require("@sap/cds");
 const { SELECT } = cds.ql;
 
 module.exports = async (srv) => {
+  const db = await cds.connect.to("db");
 
-    const db = await cds.connect.to('db');
+  const { Employee, StatutoryDetail } = cds.entities("ewms.db.employee");
+
+  /**
+   * CREATE
+   */
+  srv.before("CREATE", "StatutoryDetails", async (req) => {
+    const tx = cds.transaction(req);
 
     const {
-        Employee,
-        StatutoryDetail
-    } = db.entities('ewms.db.employee');
+      employee_ID,
+      panNumber,
+      aadhaarNumber,
+      uanNumber,
+      pfNumber,
+      esiNumber,
+      passportNumber,
+      passportExpiry,
+      isPFApplicable,
+      isESIApplicable,
+    } = req.data;
 
-    /**
-     * CREATE
-     */
-    srv.before('CREATE', 'StatutoryDetails', async (req) => {
+    // Required
 
-        const tx = cds.transaction(req);
+    if (!employee_ID) req.error(400, "Employee is required.");
 
-        const {
-            employee_ID,
-            panNumber,
-            aadhaarNumber,
-            uanNumber,
-            pfNumber,
-            esiNumber,
-            passportNumber,
-            passportExpiry,
-            isPFApplicable,
-            isESIApplicable
-        } = req.data;
+    // Employee Exists
 
-        // Required
+    const employee = await tx.run(
+      SELECT.one.from(Employee).where({
+        ID: employee_ID,
+        status: "Active",
+      }),
+    );
 
-        if (!employee_ID)
-            req.error(400, 'Employee is required.');
+    if (!employee) req.error(404, "Employee not found.");
 
-        // Employee Exists
+    // One Record Per Employee
 
-        const employee = await tx.run(
+    const existing = await tx.run(
+      SELECT.one.from(StatutoryDetail).where({
+        employee_ID,
+      }),
+    );
 
-            SELECT.one
-                .from(Employee)
-                .where({
-                    ID: employee_ID,
-                    status: 'Active'
-                })
+    if (existing)
+      req.error(400, "Statutory Details already exist for this employee.");
 
-        );
+    // PAN Validation
 
-        if (!employee)
-            req.error(404, 'Employee not found.');
+    if (panNumber && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panNumber)) {
+      req.error(400, "Invalid PAN Number.");
+    }
 
-        // One Record Per Employee
+    // Aadhaar Validation
 
-        const existing = await tx.run(
+    if (aadhaarNumber && !/^[0-9]{12}$/.test(aadhaarNumber)) {
+      req.error(400, "Invalid Aadhaar Number.");
+    }
 
-            SELECT.one
-                .from(StatutoryDetail)
-                .where({
-                    employee_ID
-                })
+    // PF Validation
 
-        );
+    if (isPFApplicable && !pfNumber) {
+      req.error(400, "PF Number is required.");
+    }
 
-        if (existing)
-            req.error(
-                400,
-                'Statutory Details already exist for this employee.'
-            );
+    // UAN Validation
 
-        // PAN Validation
+    if (isPFApplicable && !uanNumber) {
+      req.error(400, "UAN Number is required.");
+    }
 
-        if (
-            panNumber &&
-            !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panNumber)
-        ) {
+    // ESI Validation
 
-            req.error(
-                400,
-                'Invalid PAN Number.'
-            );
+    if (isESIApplicable && !esiNumber) {
+      req.error(400, "ESI Number is required.");
+    }
 
-        }
+    // Passport Expiry
 
-        // Aadhaar Validation
+    if (passportNumber && !passportExpiry) {
+      req.error(400, "Passport Expiry Date is required.");
+    }
 
-        if (
-            aadhaarNumber &&
-            !/^[0-9]{12}$/.test(aadhaarNumber)
-        ) {
+    if (passportExpiry && new Date(passportExpiry) < new Date()) {
+      req.warn("Passport has already expired.");
+    }
+  });
 
-            req.error(
-                400,
-                'Invalid Aadhaar Number.'
-            );
+  /**
+   * UPDATE
+   */
+  srv.before("UPDATE", "StatutoryDetails", async (req) => {
+    if (
+      req.data.panNumber &&
+      !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(req.data.panNumber)
+    ) {
+      req.error(400, "Invalid PAN Number.");
+    }
 
-        }
+    if (req.data.aadhaarNumber && !/^[0-9]{12}$/.test(req.data.aadhaarNumber)) {
+      req.error(400, "Invalid Aadhaar Number.");
+    }
+  });
 
-        // PF Validation
-
-        if (isPFApplicable && !pfNumber) {
-
-            req.error(
-                400,
-                'PF Number is required.'
-            );
-
-        }
-
-        // UAN Validation
-
-        if (isPFApplicable && !uanNumber) {
-
-            req.error(
-                400,
-                'UAN Number is required.'
-            );
-
-        }
-
-        // ESI Validation
-
-        if (isESIApplicable && !esiNumber) {
-
-            req.error(
-                400,
-                'ESI Number is required.'
-            );
-
-        }
-
-        // Passport Expiry
-
-        if (
-            passportNumber &&
-            !passportExpiry
-        ) {
-
-            req.error(
-                400,
-                'Passport Expiry Date is required.'
-            );
-
-        }
-
-        if (
-            passportExpiry &&
-            new Date(passportExpiry) < new Date()
-        ) {
-
-            req.warn(
-                'Passport has already expired.'
-            );
-
-        }
-
-    });
-
-    /**
-     * UPDATE
-     */
-    srv.before('UPDATE', 'StatutoryDetails', async (req) => {
-
-        if (
-            req.data.panNumber &&
-            !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(req.data.panNumber)
-        ) {
-
-            req.error(
-                400,
-                'Invalid PAN Number.'
-            );
-
-        }
-
-        if (
-            req.data.aadhaarNumber &&
-            !/^[0-9]{12}$/.test(req.data.aadhaarNumber)
-        ) {
-
-            req.error(
-                400,
-                'Invalid Aadhaar Number.'
-            );
-
-        }
-
-    });
-
-    /**
-     * DELETE
-     */
-    srv.before('DELETE', 'StatutoryDetails', async (req) => {
-
-        req.error(
-            400,
-            'Statutory Details cannot be deleted. Mark them Inactive.'
-        );
-
-    });
-
+  /**
+   * DELETE
+   */
+  srv.before("DELETE", "StatutoryDetails", async (req) => {
+    req.error(400, "Statutory Details cannot be deleted. Mark them Inactive.");
+  });
 };
