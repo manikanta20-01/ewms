@@ -11,26 +11,35 @@ async function processPayroll(req) {
 
   // 1. Fetch & Verify Target Payroll Period
   const period = await tx.run(
-    SELECT.one.from("ewms.db.payroll.PayrollPeriod").where({ ID: periodId })
+    SELECT.one.from("ewms.db.payroll.PayrollPeriod").where({ ID: periodId }),
   );
 
   if (!period) return req.error(404, "Target Payroll Period not found.");
   if (period.isLocked) {
-    return req.error(400, `Cannot process locked Payroll Period '${period.payrollCode}'.`);
+    return req.error(
+      400,
+      `Cannot process locked Payroll Period '${period.payrollCode}'.`,
+    );
   }
 
   const workingDays = Number(period.workingDays || 0);
   if (workingDays <= 0) {
-    return req.error(400, `Payroll Period '${period.payrollCode}' has invalid working days.`);
+    return req.error(
+      400,
+      `Payroll Period '${period.payrollCode}' has invalid working days.`,
+    );
   }
 
   // 2. Simple Flat Query for Active Employee Salaries
   const activeSalaries = await tx.run(
-    SELECT.from("ewms.db.payroll.EmployeeSalary").where({ status: "Active" })
+    SELECT.from("ewms.db.payroll.EmployeeSalary").where({ status: "Active" }),
   );
 
   if (!activeSalaries.length) {
-    return req.error(400, "No active employee CTC records found for processing.");
+    return req.error(
+      400,
+      "No active employee CTC records found for processing.",
+    );
   }
 
   let successCount = 0;
@@ -41,7 +50,7 @@ async function processPayroll(req) {
     DELETE.from("ewms.db.payroll.PayrollProcess").where({
       payrollPeriod_ID: periodId,
       processStatus: { in: ["Pending", "Processed"] },
-    })
+    }),
   );
 
   // 3. Process Batch Iteration
@@ -53,11 +62,13 @@ async function processPayroll(req) {
       const items = await tx.run(
         SELECT.from("ewms.db.payroll.SalaryStructureItem").where({
           salaryStructure_ID: structId,
-        })
+        }),
       );
 
       if (!items || !items.length) {
-        throw new Error(`Salary Structure '${structId}' has no defined components in SalaryStructureItem.`);
+        throw new Error(
+          `Salary Structure '${structId}' has no defined components in SalaryStructureItem.`,
+        );
       }
 
       // Fetch Attendance Records
@@ -65,12 +76,18 @@ async function processPayroll(req) {
         SELECT.from("ewms.db.attendance.Attendance").where({
           employee_ID: sal.employee_ID,
           attendanceDate: { ">=": period.startDate, "<=": period.endDate },
-        })
+        }),
       );
 
-      const presentDays = attendanceRecords.filter((a) => a.attendanceStatus === "Present").length;
-      const absentDays = attendanceRecords.filter((a) => a.attendanceStatus === "Absent").length;
-      const halfDays = attendanceRecords.filter((a) => a.attendanceStatus === "HalfDay").length;
+      const presentDays = attendanceRecords.filter(
+        (a) => a.attendanceStatus === "Present",
+      ).length;
+      const absentDays = attendanceRecords.filter(
+        (a) => a.attendanceStatus === "Absent",
+      ).length;
+      const halfDays = attendanceRecords.filter(
+        (a) => a.attendanceStatus === "HalfDay",
+      ).length;
 
       const lopDays = absentDays + halfDays * 0.5;
       const payableDays = Math.max(0, workingDays - lopDays);
@@ -84,7 +101,7 @@ async function processPayroll(req) {
         const comp = await tx.run(
           SELECT.one
             .from("ewms.db.payroll.SalaryComponent")
-            .where({ ID: item.salaryComponent_ID })
+            .where({ ID: item.salaryComponent_ID }),
         );
 
         if (!comp) continue;
@@ -93,11 +110,14 @@ async function processPayroll(req) {
         if (comp.calculationType === "Fixed") {
           calculatedAmt = Number(item.amount || 0);
         } else if (comp.calculationType === "Percentage") {
-          calculatedAmt = Number(sal.monthlyCTC) * (Number(item.percentage || 0) / 100);
+          calculatedAmt =
+            Number(sal.monthlyCTC) * (Number(item.percentage || 0) / 100);
         }
 
         if (comp.componentType === "Earning") {
-          calculatedAmt = Number(((calculatedAmt / workingDays) * payableDays).toFixed(2));
+          calculatedAmt = Number(
+            ((calculatedAmt / workingDays) * payableDays).toFixed(2),
+          );
           totalEarnings += calculatedAmt;
         } else {
           calculatedAmt = Number(calculatedAmt.toFixed(2));
@@ -132,7 +152,7 @@ async function processPayroll(req) {
           totalDeductions: totalDeductions,
           netSalary: netSalary,
           processStatus: "Processed",
-        })
+        }),
       );
 
       // Insert Line Items
@@ -145,7 +165,7 @@ async function processPayroll(req) {
         }));
 
         await tx.run(
-          INSERT.into("ewms.db.payroll.PayrollDetail").entries(detailEntries)
+          INSERT.into("ewms.db.payroll.PayrollDetail").entries(detailEntries),
         );
       }
 
@@ -158,12 +178,15 @@ async function processPayroll(req) {
           performedBy_ID: sal.employee_ID,
           performedOn: new Date().toISOString(),
           remarks: `Payroll processed successfully. Payable days: ${payableDays}/${workingDays}.`,
-        })
+        }),
       );
 
       successCount++;
     } catch (err) {
-      console.error(`[PayrollEngine Error] Employee ${sal.employee_ID}:`, err.message || err);
+      console.error(
+        `[PayrollEngine Error] Employee ${sal.employee_ID}:`,
+        err.message || err,
+      );
       failedCount++;
     }
   }
@@ -172,7 +195,7 @@ async function processPayroll(req) {
   await tx.run(
     UPDATE("ewms.db.payroll.PayrollPeriod")
       .set({ processedOn: new Date().toISOString() })
-      .where({ ID: periodId })
+      .where({ ID: periodId }),
   );
 
   return `Payroll Execution Summary for Period '${period.payrollCode}': Processed: ${successCount}, Exceptions/Failed: ${failedCount}.`;
@@ -189,20 +212,20 @@ async function approvePayrollBatch(req) {
     SELECT.from("ewms.db.payroll.PayrollProcess").where({
       payrollPeriod_ID: periodId,
       processStatus: "Processed",
-    })
+    }),
   );
 
   if (!records.length) {
     return req.error(
       400,
-      "No 'Processed' payroll records available in this batch for approval."
+      "No 'Processed' payroll records available in this batch for approval.",
     );
   }
 
   await tx.run(
     UPDATE("ewms.db.payroll.PayrollProcess")
       .set({ processStatus: "Approved" })
-      .where({ payrollPeriod_ID: periodId, processStatus: "Processed" })
+      .where({ payrollPeriod_ID: periodId, processStatus: "Processed" }),
   );
 
   const timestamp = new Date().toISOString();
@@ -214,7 +237,7 @@ async function approvePayrollBatch(req) {
         payrollProcess_ID: rec.ID,
         payslipNumber: `PSL-${Date.now()}-${rec.ID.substring(0, 4)}`,
         generatedOn: timestamp,
-      })
+      }),
     );
 
     await tx.run(
@@ -225,7 +248,7 @@ async function approvePayrollBatch(req) {
         performedBy_ID: rec.employee_ID,
         performedOn: timestamp,
         remarks: "Batch approval executed.",
-      })
+      }),
     );
   }
 
@@ -236,26 +259,54 @@ async function lockPayroll(req) {
   const tx = cds.transaction(req);
   const periodId = req.params[0]?.ID || req.params[0];
 
+  const period = await tx.run(
+    SELECT.one.from("ewms.db.payroll.PayrollPeriod").where({ ID: periodId }),
+  );
+
+  if (!period) {
+    return req.error(404, `Payroll period not found for ID '${periodId}'.`);
+  }
+
+  const payrollNumber = period.payrollCode || periodId;
+
+  if (period.isLocked) {
+    return `Payroll ${payrollNumber} is already locked. No changes made.`;
+  }
+
   await tx.run(
     UPDATE("ewms.db.payroll.PayrollPeriod")
       .set({ isLocked: true })
-      .where({ ID: periodId })
+      .where({ ID: periodId }),
   );
 
-  return "Payroll Period locked successfully. Modifications are now disabled.";
+  return `Payroll ${payrollNumber} locked successfully. Modifications are now disabled.`;
 }
 
 async function unlockPayroll(req) {
   const tx = cds.transaction(req);
   const periodId = req.params[0]?.ID || req.params[0];
 
+  const period = await tx.run(
+    SELECT.one.from("ewms.db.payroll.PayrollPeriod").where({ ID: periodId }),
+  );
+
+  if (!period) {
+    return req.error(404, `Payroll period not found for ID '${periodId}'.`);
+  }
+
+  const payrollNumber = period.payrollCode || periodId;
+
+  if (!period.isLocked) {
+    return `Payroll ${payrollNumber} is already unlocked. No changes made.`;
+  }
+
   await tx.run(
     UPDATE("ewms.db.payroll.PayrollPeriod")
       .set({ isLocked: false })
-      .where({ ID: periodId })
+      .where({ ID: periodId }),
   );
 
-  return "Payroll Period unlocked.";
+  return `Payroll ${payrollNumber} unlocked successfully.`;
 }
 
 module.exports = {

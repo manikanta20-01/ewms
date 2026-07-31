@@ -160,13 +160,13 @@ Content-Type: application/json
 
 ### 20. Employee - Read Own Payslip (200)
 GET {{host}}/payroll/Payslips
-Authorization: Basic empjohn:
+Authorization: Basic sysadmin:
 
 
 
 ### 21. Employee - Read Another Payslip (403)
 GET {{host}}/payroll/Payslips?$filter=employee_ID eq 10000000-0000-0000-0000-000000000002
-Authorization: Basic empjohn:
+Authorization: Basic sysadmin:
 
 
 ###############################################################################
@@ -181,11 +181,15 @@ GET http://localhost:4004/odata/v4/payroll/PayrollPeriods(8e000000-0000-0000-000
 Authorization: Basic payexec:
 
 ###
+### Run ProcessPayroll as PayrollExecutive (payexec:123)
+### Run ProcessPayroll as SystemAdmin (sysadmin:123)
 POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(8e000000-0000-0000-0000-000000000002)/PayrollService.ProcessPayroll
-Authorization: Basic payexec:
+Authorization: Basic c3lzYWRtaW46MTIz
 Content-Type: application/json
 
-{ "otRateMultiplier": 1.5 }
+{
+  "otRateMultiplier": 1.5
+}
 
 ###
 GET http://localhost:4004/odata/v4/payroll/$metadata

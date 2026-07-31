@@ -1,126 +1,70 @@
-### GET Employees
-GET http://localhost:4004/odata/v4/employee/Employees
-Content-Type: application/json
-
-### GET with expand
-GET http://localhost:4004/odata/v4/employee/Employees?$expand=banks,educations,experiences,documents,statutoryDetails
-
-### POST Employee
-PATCH http://localhost:4004/odata/v4/employee/Employees
+### Run ProcessPayroll as SystemAdmin (sysadmin:123)
+POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(8e000000-0000-0000-0000-000000000002)/PayrollService.ProcessPayroll
+Authorization: Basic sysadmin:123
 Content-Type: application/json
 
 {
-    "ID": "2647f862-950c-48a6-b490-6e65dbf04285",
-    "mobile":"9985251944"
+  "otRateMultiplier": 1.5
 }
 
-### GET Banks
-GET http://localhost:4004/odata/v4/employee/Banks
 
-### Create bank account
-POST http://localhost:4004/odata/v4/employee/Banks
+### 23. Payroll Executive - Approve Payroll Batch (403)
+POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(10000000-0000-0000-0000-000000000001)/PayrollService.ApprovePayrollBatch
+Authorization: Basic payexec:
 Content-Type: application/json
 
-{
-    "employee_ID":"2647f862-950c-48a6-b490-6e65dbf04285",
-    "bankName":"ICICI Bank",
-    "branchName":"Hyderabad",
-    "accountHolderName":"Rahul Sharma",
-    "accountNumber":"123456789012",
-    "accountType":"Salary",
-    "currency":"INR",
-    "ifscCode":"ICIC0001234",
-    "swiftCode":"ICICINBB",
-    "upiId":"rahul@icici"
-}
+{}
 
-### Create bank account
-PUT http://localhost:4004/odata/v4/employee/Banks
+### 24. Finance Manager - Approve Payroll Batch (200)
+POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(10000000-0000-0000-0000-000000000001)/PayrollService.ApprovePayrollBatch
+Authorization: Basic finmgr:
 Content-Type: application/json
 
-{
-    "employee_ID":"2647f862-950c-48a6-b490-6e65dbf04285",
-    "bankName":"ICICI Bank",
-    "branchName":"Hyderabad",
-    "accountHolderName":"Rahul Sharma",
-    "accountNumber":"123456789012",
-    "accountType":"Salary",
-    "currency":"INR",
-    "ifscCode":"ICIC0001235",
-    "swiftCode":"ICICINBB",
-    "upiId":"rahul@icici"
-}
+{}
 
-### CREATE eDUCATION
-POST http://localhost:4004/odata/v4/employee/Educations
+### 25. Finance Manager - Lock Payroll (200)
+POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(8e000000-0000-0000-0000-000000000001)/PayrollService.LockPayroll
+Authorization: Basic finmgr:
 Content-Type: application/json
 
-{
-    "employee_ID":"2647f862-950c-48a6-b490-6e65dbf04285",
-    "qualification":"Bachelor",
-    "degree":"B.Tech",
-    "specialization":"Computer Science",
-    "institution":"JNTUH",
-    "boardUniversity":"JNTUH",
-    "country":"India",
-    "passingYear":2022,
-    "percentage":82,
-    "cgpa":8.4,
-    "grade":"A"
-}
+{}
 
-### create experence
-POST http://localhost:4004/odata/v4/employee/Experiences
+### 26. Payroll Executive - Unlock Payroll (403)
+POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(10000000-0000-0000-0000-000000000001)/PayrollService.UnlockPayroll
+Authorization: Basic payexec:
 Content-Type: application/json
 
-{
-    "employee_ID":"2647f862-950c-48a6-b490-6e65dbf04285",
-    "companyName":"Infosys",
-    "designation":"Software Engineer",
-    "employmentType":"Permanent",
-    "joiningDate":"2020-01-01",
-    "relievingDate":"2023-12-31",
-    "lastSalary":650000,
-    "location":"Hyderabad",
-    "reasonForLeaving":"Career Growth"
-}
-### create Document
-POST http://localhost:4004/odata/v4/employee/Documents
+{}
+
+### 26. Payroll Executive - Unlock Payroll (403)
+POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(10000000-0000-0000-0000-000000000001)/PayrollService.UnlockPayroll
+Authorization: Basic sysadmin:123:
 Content-Type: application/json
 
-{
-    "employee_ID":"2647f862-950c-48a6-b490-6e65dbf04285",
-    "documentType":"PAN",
-    "documentNumber":"ABCDE1234F",
-    "fileName":"pan.pdf",
-    "mimeType":"application/pdf",
-    "fileSize":250000,
-    "filePath":"/documents/pan.pdf"
-}
+{}
 
-### GET STATUTORY 
-GET http://localhost:4004/odata/v4/employee/StatutoryDetails
-
-
-### Statutory Details
-POST http://localhost:4004/odata/v4/employee/StatutoryDetails
+### 27. SystemAdmin - Unlock Payroll (200)
+POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(8e000000-0000-0000-0000-000000000001)/PayrollService.UnlockPayroll
+Authorization: Basic sysadmin:
 Content-Type: application/json
 
-{
-    "employee_ID":"2647f862-950c-48a6-b490-6e65dbf04285",
-    "uanNumber":"100000001",
-    "pfNumber":"PF100001",
-    "esiNumber":"ESI100001",
-    "panNumber":"ABCDE1234F",
-    "aadhaarNumber":"123456789012",
-    "isPFApplicable":true,
-    "isESIApplicable":true
-}
-
-### Statutory Details
-PATCH http://localhost:4004/odata/v4/employee/StatutoryDetails(651330a2-b55c-4648-914c-348d6d871e51)
+{}
+###
+POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(8e000000-0000-0000-0000-000000000002)/PayrollService.ProcessPayroll
+Authorization: Basic sysadmin:
 Content-Type: application/json
 
-{
-    "panNumber":"ABCDE1234U"   
-}
+{ "otRateMultiplier": 1.5 }
+
+###
+GET http://localhost:4004/odata/v4/payroll/PayrollProcesses?$filter=payrollPeriod_ID eq 8e000000-0000-0000-0000-000000000002
+Authorization: Basic sysadmin:
+
+###
+POST http://localhost:4004/odata/v4/payroll/PayrollProcesses(1a5aa26f-dc60-48a9-befa-50964cceb584)/PayrollService.RecalculatePayroll
+Authorization: Basic payexec:
+Content-Type: application/json
+
+{}
+
+
