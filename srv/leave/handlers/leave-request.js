@@ -1,5 +1,5 @@
 const cds = require("@sap/cds");
-const { SELECT } = cds.ql;
+const { SELECT, INSERT } = cds.ql;
 const { required } = require("../../common/utils/validation");
 const { generateCode } = require("../../common/utils/code-generator");
 
@@ -64,7 +64,7 @@ module.exports = (srv) => {
     }
 
     // 5. Transactional Metadata Enrichment
-    req.data.status = req.data.status || "Draft";
+    req.data.status = req.data.status || "Pending";
     req.data.appliedOn = new Date().toISOString();
 
     req.data.leaveNumber = await generateCode(
@@ -74,6 +74,59 @@ module.exports = (srv) => {
       "LV",
       6,
     );
+  });
+
+  // ============================================================
+  // AFTER CREATE - Auto-Generate Two-Level Approval Workflow
+  // (Level 1: Reporting Manager, Level 2: HR)
+  // ============================================================
+  srv.after("CREATE", "LeaveRequests", async (data, req) => {
+    const tx = cds.transaction(req);
+    const records = Array.isArray(data) ? data : [data];
+
+    for (const rec of records) {
+      if (!rec.ID) continue;
+
+      // Level 1 approver: employee's active reporting manager
+      const assignment = await tx.run(
+        SELECT.one
+          .from("ewms.db.employee.EmployeeAssignment")
+          .where({ employee_ID: rec.employee_ID, isActive: true }),
+      );
+      const level1Approver = assignment?.reportingManager_ID;
+
+      if (level1Approver) {
+        await tx.run(
+          INSERT.into("ewms.db.leave.LeaveApproval").entries({
+            ID: cds.utils.uuid(),
+            leaveRequest_ID: rec.ID,
+            approver_ID: level1Approver,
+            level: 1,
+            decision: "Pending",
+          }),
+        );
+      }
+
+      // Level 2 approver: active HR representative
+      const hr = await tx.run(
+        SELECT.one
+          .from("ewms.db.organization.DepartmentHR")
+          .where({ isActive: true }),
+      );
+      const level2Approver = hr?.employee_ID;
+
+      if (level2Approver) {
+        await tx.run(
+          INSERT.into("ewms.db.leave.LeaveApproval").entries({
+            ID: cds.utils.uuid(),
+            leaveRequest_ID: rec.ID,
+            approver_ID: level2Approver,
+            level: 2,
+            decision: "Pending",
+          }),
+        );
+      }
+    }
   });
 
   // ============================================================

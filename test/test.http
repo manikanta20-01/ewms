@@ -1,70 +1,174 @@
-### Run ProcessPayroll as SystemAdmin (sysadmin:123)
-POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(8e000000-0000-0000-0000-000000000002)/PayrollService.ProcessPayroll
-Authorization: Basic sysadmin:123
+###
+GET http://localhost:4004/odata/v4/payroll/PayrollProcesses
+Authorization: Basic sysadmin:
+
+### 28. Payroll Executive - Recalculate Payroll (200)
+POST http://localhost:4004/odata/v4/payroll/PayrollProcesses(2b324c13-fca5-49cd-8aa7-c65847fefe64)/PayrollService.RecalculatePayroll
+Authorization: Basic payexec:
+Content-Type: application/json
+
+{}
+
+### 29. Finance Manager - Reject Payroll (200)
+POST http://localhost:4004/odata/v4/payroll/PayrollProcesses(4ea31f0a-549a-482a-bef9-09af542c3aae)/PayrollService.RejectPayroll
+Authorization: Basic finmgr:
 Content-Type: application/json
 
 {
-  "otRateMultiplier": 1.5
+  "reason": "Discrepancy found in overtime calculation"
 }
 
-
-### 23. Payroll Executive - Approve Payroll Batch (403)
-POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(10000000-0000-0000-0000-000000000001)/PayrollService.ApprovePayrollBatch
-Authorization: Basic payexec:
-Content-Type: application/json
-
-{}
-
-### 24. Finance Manager - Approve Payroll Batch (200)
-POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(10000000-0000-0000-0000-000000000001)/PayrollService.ApprovePayrollBatch
+###
+POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(8e000000-0000-0000-0000-000000000002)/PayrollService.ApprovePayrollBatch
 Authorization: Basic finmgr:
 Content-Type: application/json
 
 {}
 
-### 25. Finance Manager - Lock Payroll (200)
-POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(8e000000-0000-0000-0000-000000000001)/PayrollService.LockPayroll
+###
+GET http://localhost:4004/odata/v4/payroll/Payslips
+Authorization: Basic sysadmin:
+
+
+###
+### 30. HR Admin - Publish Payslip (200)
+POST http://localhost:4004/odata/v4/payroll/Payslips(5e42458a-b552-4408-b9fe-a7b8ad73b8ce)/PayrollService.PublishPayslip
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{}
+
+###
+### 31. Employee - Publish Payslip (403)
+POST http://localhost:4004/odata/v4/payroll/Payslips(64e3e4ea-77bd-48ce-8210-4606610d779d)/PayrollService.PublishPayslip
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{}
+
+###
+### 32. SystemAdmin - Read Employees (200)
+GET http://localhost:4004/odata/v4/employee/Employees
+Authorization: Basic sysadmin:
+
+###
+### 33. SystemAdmin - Read Payroll (200)
+GET http://localhost:4004/odata/v4/payroll/PayrollProcesses
+Authorization: Basic sysadmin:
+
+
+###
+### 34. SystemAdmin - Read Leave (200)
+GET http://localhost:4004/odata/v4/leave/LeaveRequests
+Authorization: Basic sysadmin:
+
+###
+POST http://localhost:4004/odata/v4/payroll/PayrollProcesses(4ea31f0a-549a-482a-bef9-09af542c3aae)/PayrollService.RejectPayroll
+Authorization: Basic finmgr:
+Content-Type: application/json
+
+{ "reason": "Discrepancy found in overtime calculation" }
+
+
+###
+GET http://localhost:4004/odata/v4/payroll/PayrollProcesses(4ea31f0a-549a-482a-bef9-09af542c3aae)
+Authorization: Basic sysadmin:
+
+
+### 34. SystemAdmin - Read Leave (200)
+GET http://localhost:4004/odata/v4/leave/LeaveRequests
+Authorization: Basic sysadmin:
+
+###
+PATCH http://localhost:4004/odata/v4/leave/LeaveApprovals(7e000000-0000-0000-0000-000000000002)
+Authorization: Basic mgrdept:
+Content-Type: application/json
+
+{
+    "decision": "Approved",
+    "remarks": "Approved by Department Manager"
+}
+
+###
+GET http://localhost:4004/odata/v4/leave/LeaveRequests(7d000000-0000-0000-0000-000000000002)
+Authorization: Basic sysadmin:
+
+###
+POST http://localhost:4004/odata/v4/leave/LeaveRequests
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{
+    "employee_ID":"10000000-0000-0000-0000-000000000001",
+    "leaveType_ID":"7a000000-0000-0000-0000-000000000001",
+    "fromDate":"2026-10-01",
+    "toDate":"2026-10-02",
+    "reason":"Testing auto-generated approval workflow"
+}
+
+# ===========================================================
+
+
+### 29. Finance Manager - Reject Payroll (200)
+POST http://localhost:4004/odata/v4/payroll/PayrollProcesses(dbef2689-92a3-44ac-9d07-91865b823f75)/PayrollService.RejectPayroll
 Authorization: Basic finmgr:
 Content-Type: application/json
 
 {}
 
-### 26. Payroll Executive - Unlock Payroll (403)
-POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(10000000-0000-0000-0000-000000000001)/PayrollService.UnlockPayroll
-Authorization: Basic payexec:
+
+### 30. HR Admin - Publish Payslip (200)
+POST http://localhost:4004/odata/v4/payroll/Payslips(10000000-0000-0000-0000-000000000001)/PayrollService.PublishPayslip
+Authorization: Basic hrperson:
 Content-Type: application/json
 
 {}
 
-### 26. Payroll Executive - Unlock Payroll (403)
-POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(10000000-0000-0000-0000-000000000001)/PayrollService.UnlockPayroll
-Authorization: Basic sysadmin:123:
+
+### 31. Employee - Publish Payslip (403)
+POST http://localhost:4004/odata/v4/payroll/Payslips(10000000-0000-0000-0000-000000000001)/PayrollService.PublishPayslip
+Authorization: Basic empjohn:
 Content-Type: application/json
 
 {}
 
-### 27. SystemAdmin - Unlock Payroll (200)
-POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(8e000000-0000-0000-0000-000000000001)/PayrollService.UnlockPayroll
-Authorization: Basic sysadmin:
-Content-Type: application/json
 
-{}
-###
-POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(8e000000-0000-0000-0000-000000000002)/PayrollService.ProcessPayroll
-Authorization: Basic sysadmin:
-Content-Type: application/json
-
-{ "otRateMultiplier": 1.5 }
-
-###
-GET http://localhost:4004/odata/v4/payroll/PayrollProcesses?$filter=payrollPeriod_ID eq 8e000000-0000-0000-0000-000000000002
+### 32. SystemAdmin - Read Employees (200)
+GET http://localhost:4004/odata/v4/employee/Employees
 Authorization: Basic sysadmin:
 
-###
-POST http://localhost:4004/odata/v4/payroll/PayrollProcesses(1a5aa26f-dc60-48a9-befa-50964cceb584)/PayrollService.RecalculatePayroll
-Authorization: Basic payexec:
-Content-Type: application/json
 
-{}
+### 33. SystemAdmin - Read Payroll (200)
+GET http://localhost:4004/odata/v4/payroll/PayrollProcesses
+Authorization: Basic sysadmin:
 
 
+### 34. SystemAdmin - Read Leave (200)
+GET http://localhost:4004/odata/v4/leave/LeaveRequests
+Authorization: Basic sysadmin:
+
+
+### 35. SystemAdmin - Read Attendance (200)
+GET http://localhost:4004/odata/v4/attendance/Attendances
+Authorization: Basic sysadmin:
+
+
+### 36. Invalid Credentials (401)
+GET http://localhost:4004/odata/v4/organization/Companies
+Authorization: Basic invalid:
+
+
+### 37. Anonymous Employee API (401)
+GET http://localhost:4004/odata/v4/employee/Employees
+
+
+### 38. Anonymous Payroll API (401)
+GET http://localhost:4004/odata/v4/payroll/PayrollPeriods
+
+
+### 39. Anonymous Leave API (401)
+GET http://localhost:4004/odata/v4/leave/LeaveRequests
+
+
+### 40. Anonymous Attendance API (401)
+GET http://localhost:4004/odata/v4/attendance/Attendances

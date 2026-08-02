@@ -27,7 +27,7 @@ async function publishPayslip(req) {
     INSERT.into("ewms.db.payroll.PayrollHistory").entries({
       payrollProcess_ID: payslip.payrollProcess_ID,
       action: "Published",
-      performedBy: req.user.id || "PAYROLL_MGR",
+      performedBy_ID: req.user.employeeId,
       performedOn: new Date().toISOString(),
       remarks: `Payslip #${payslip.payslipNumber} published for employee view.`,
     }),

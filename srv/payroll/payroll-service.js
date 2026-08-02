@@ -5,6 +5,11 @@ const {
   lockPayroll,
   unlockPayroll,
 } = require("./handlers/payroll-engine");
+const {
+  recalculatePayroll,
+  rejectPayroll,
+} = require("./handlers/payroll-process-actions");
+const { publishPayslip } = require("./handlers/payslip-actions");
 
 /**
  * EWMS Payroll Service Class Implementation
@@ -37,6 +42,22 @@ module.exports = cds.service.impl(async function () {
   });
 
   // ------------------------------------------------------------------
+  // BOUND ACTIONS (Bound to PayrollProcesses / Payslips)
+  // ------------------------------------------------------------------
+
+  this.on("RecalculatePayroll", PayrollProcesses, async (req) => {
+    return await recalculatePayroll(req);
+  });
+
+  this.on("RejectPayroll", PayrollProcesses, async (req) => {
+    return await rejectPayroll(req);
+  });
+
+  this.on("PublishPayslip", this.entities.Payslips, async (req) => {
+    return await publishPayslip(req);
+  });
+
+  // ------------------------------------------------------------------
   // UNBOUND / STANDALONE ACTIONS (Fallback Binding)
   // ------------------------------------------------------------------
 
@@ -54,6 +75,18 @@ module.exports = cds.service.impl(async function () {
 
   this.on("UnlockPayroll", async (req) => {
     return await unlockPayroll(req);
+  });
+
+  this.on("RecalculatePayroll", async (req) => {
+    return await recalculatePayroll(req);
+  });
+
+  this.on("RejectPayroll", async (req) => {
+    return await rejectPayroll(req);
+  });
+
+  this.on("PublishPayslip", async (req) => {
+    return await publishPayslip(req);
   });
 
   // ------------------------------------------------------------------

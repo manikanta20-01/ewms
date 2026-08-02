@@ -27,61 +27,41 @@
         "kind": "mocked",
         "restrict_all_services": true,
         "users": {
-          "sysadmin": {
+          "empjohn": {
             "roles": [
-              "SystemAdmin"
+              "Employee"
             ],
-            "employeeId": "10000000-0000-0000-0000-000000000001",
-            "departmentId": "11111111-dddd-1111-dddd-111111111111"
-          },
-          "hrperson": {
-            "roles": [
-              "HRAdmin"
-            ],
-            "employeeId": "10000000-0000-0000-0000-000000000002",
-            "departmentId": "11111111-dddd-1111-dddd-111111111111"
-          },
-          "hrlead": {
-            "roles": [
-              "HRExecutive"
-            ],
-            "employeeId": "10000000-0000-0000-0000-000000000005",
-            "departmentId": "44444444-dddd-4444-dddd-444444444444"
+            "attr": {
+              "employeeId": "10000000-0000-0000-0000-000000000001",
+              "departmentId": "11111111-dddd-1111-dddd-111111111111"
+            }
           },
           "mgrdept": {
             "roles": [
               "DepartmentManager"
             ],
-            "employeeId": "10000000-0000-0000-0000-000000000004",
-            "departmentId": "11111111-dddd-1111-dddd-111111111111"
+            "attr": {
+              "employeeId": "10000000-0000-0000-0000-000000000004",
+              "departmentId": "11111111-dddd-1111-dddd-111111111111"
+            }
           },
-          "mgrproj": {
+          "hrperson": {
             "roles": [
-              "ProjectManager"
+              "HRAdmin"
             ],
-            "employeeId": "10000000-0000-0000-0000-000000000003",
-            "departmentId": "22222222-dddd-2222-dddd-222222222222"
+            "attr": {
+              "employeeId": "10000000-0000-0000-0000-000000000002",
+              "departmentId": "11111111-dddd-1111-dddd-111111111111"
+            }
           },
           "payexec": {
             "roles": [
               "PayrollExecutive"
             ],
-            "employeeId": "10000000-0000-0000-0000-000000000006",
-            "departmentId": "11111111-dddd-1111-dddd-111111111111"
-          },
-          "finmgr": {
-            "roles": [
-              "FinanceManager"
-            ],
-            "employeeId": "10000000-0000-0000-0000-000000000002",
-            "departmentId": "11111111-dddd-1111-dddd-111111111111"
-          },
-          "empjohn": {
-            "roles": [
-              "Employee"
-            ],
-            "employeeId": "10000000-0000-0000-0000-000000000001",
-            "departmentId": "11111111-dddd-1111-dddd-111111111111"
+            "attr": {
+              "employeeId": "10000000-0000-0000-0000-000000000006",
+              "departmentId": "11111111-dddd-1111-dddd-111111111111"
+            }
           }
         }
       }

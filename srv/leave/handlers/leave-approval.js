@@ -3,8 +3,12 @@ const { SELECT, UPDATE, INSERT } = cds.ql;
 const { required } = require("../../common/utils/validation");
 
 module.exports = (srv) => {
-  const { LeaveApproval, LeaveRequest, LeaveBalance, ApprovalHistory } =
-    srv.entities;
+  const {
+    LeaveApprovals: LeaveApproval,
+    LeaveRequests: LeaveRequest,
+    LeaveBalances: LeaveBalance,
+    ApprovalHistories: ApprovalHistory,
+  } = srv.entities;
 
   // ============================================================
   // UPDATE - Multi-Level Approval Routing (Level 1: Mgr, Level 2: HR)

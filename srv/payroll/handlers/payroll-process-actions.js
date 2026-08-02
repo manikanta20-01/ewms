@@ -123,7 +123,7 @@ async function recalculatePayroll(req) {
 
     newDetails.push({
       salaryComponent_ID: comp.ID,
-      amount: calculatedAmt,
+      calculatedAmount: calculatedAmt,
     });
   }
 
@@ -153,7 +153,7 @@ async function recalculatePayroll(req) {
         totalEarnings,
         totalDeductions,
         netSalary,
-        status: "Processed",
+        processStatus: "Processed",
       })
       .where({ ID: processId }),
   );
@@ -164,7 +164,7 @@ async function recalculatePayroll(req) {
       INSERT.into("ewms.db.payroll.PayrollDetail").entries({
         payrollProcess_ID: processId,
         salaryComponent_ID: detail.salaryComponent_ID,
-        amount: detail.amount,
+        calculatedAmount: detail.calculatedAmount,
       }),
     );
   }
@@ -174,7 +174,7 @@ async function recalculatePayroll(req) {
     INSERT.into("ewms.db.payroll.PayrollHistory").entries({
       payrollProcess_ID: processId,
       action: "Recalculated",
-      performedBy: req.user.id || "SYSTEM_HR",
+      performedBy_ID: req.user.attr?.employeeId || processRec.employee_ID,
       performedOn: new Date().toISOString(),
       remarks: `Single employee recalculation complete. Net Salary: ₹${netSalary}.`,
     }),
@@ -193,7 +193,7 @@ async function rejectPayroll(req) {
 
   await tx.run(
     UPDATE("ewms.db.payroll.PayrollProcess")
-      .set({ status: "Rejected" })
+      .set({ processStatus: "Rejected" })
       .where({ ID: processId }),
   );
 
@@ -201,7 +201,7 @@ async function rejectPayroll(req) {
     INSERT.into("ewms.db.payroll.PayrollHistory").entries({
       payrollProcess_ID: processId,
       action: "Rejected",
-      performedBy: req.user.id || "SYSTEM_HR",
+      performedBy_ID: req.user.attr?.employeeId || processRec.employee_ID,
       performedOn: new Date().toISOString(),
       remarks: reason || "Payroll process rejected during review.",
     }),

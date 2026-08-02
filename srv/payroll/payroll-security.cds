@@ -15,7 +15,9 @@ annotate PayrollService.PayrollPeriods with @restrict: [
 // 2. Payroll Processes
 annotate PayrollService.PayrollProcesses with @restrict: [
     { grant: ['READ', 'CREATE', 'UPDATE', 'DELETE'], to: ['PayrollExecutive', 'SystemAdmin'] },
-    { grant: ['READ'],                               to: ['FinanceManager', 'HRAdmin'] }
+    { grant: ['READ'],                               to: ['FinanceManager', 'HRAdmin'] },
+    { grant: ['RecalculatePayroll'],                 to: ['PayrollExecutive', 'SystemAdmin'] },
+    { grant: ['RejectPayroll'],                      to: ['FinanceManager', 'SystemAdmin'] }
 ];
 
 // 3. Employee Salaries
@@ -27,7 +29,8 @@ annotate PayrollService.EmployeeSalaries with @restrict: [
 // 4. Payslips (Row-Level Security)
 annotate PayrollService.Payslips with @restrict: [
     { grant: ['READ'],                         to: ['Employee'], where: 'payrollProcess.employee_ID = $user.employeeId' },
-    { grant: ['READ', 'CREATE', 'UPDATE', 'DELETE'], to: ['HRAdmin', 'PayrollExecutive', 'SystemAdmin'] }
+    { grant: ['READ', 'CREATE', 'UPDATE', 'DELETE'], to: ['HRAdmin', 'PayrollExecutive', 'SystemAdmin'] },
+    { grant: ['PublishPayslip'],               to: ['HRAdmin', 'SystemAdmin'] }
 ];
 
 // 5. Payroll Histories & Details

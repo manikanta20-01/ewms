@@ -16,10 +16,19 @@ cds.on("bootstrap", (app) => {
       const iasUserId = user._req?.tokenInfo?.getPayload?.().sub || user.id;
 
       const resolved = await employeeContextCache.resolve(iasUserId);
-      if (resolved) {
-        user.attr.employeeId = resolved.employeeId;
-        user.attr.departmentId = resolved.departmentId;
-      }
+if (resolved) {
+  user.attr.employeeId = resolved.employeeId;
+  user.attr.departmentId = resolved.departmentId;
+} else if (user.employeeId || user.departmentId) {
+  // Dev/mocked-auth fallback: package.json's mocked users define
+  // employeeId/departmentId directly on the user object (not under
+  // .attr). The AppUsers-based cache lookup above only resolves
+  // real IAS identities, so for local/mocked auth we bridge those
+  // config values into user.attr, since $user.<attr> bindings in
+  // @restrict where-clauses read exclusively from user.attr.
+  user.attr.employeeId = user.employeeId;
+  user.attr.departmentId = user.departmentId;
+}
     } catch (err) {
       console.error("Failed to resolve employee context:", err);
     }
