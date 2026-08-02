@@ -106,6 +106,255 @@ Content-Type: application/json
     "reason":"Testing auto-generated approval workflow"
 }
 
+###
+GET http://localhost:4004/odata/v4/leave/LeaveApprovals?$filter=leaveRequest_ID eq 7e6c0b82-5050-4387-b96f-a25fecddcbf9
+Authorization: Basic empjohn:
+
+
+###
+GET http://localhost:4004/odata/v4/employee/Employees
+Authorization: Basic empjohn:
+
+###
+GET http://localhost:4004/odata/v4/employee/Documents
+Authorization: Basic empjohn:
+
+###
+GET http://localhost:4004/odata/v4/employee/Banks
+Authorization: Basic empjohn:
+
+###
+GET http://localhost:4004/odata/v4/attendance/Attendances
+Authorization: Basic empjohn:
+
+###
+GET http://localhost:4004/odata/v4/leave/LeaveRequests
+Authorization: Basic empjohn:
+
+###
+PATCH http://localhost:4004/odata/v4/leave/LeaveApprovals(9b6750d0-b3fe-4be7-8466-2a9a418c316e)
+Authorization: Basic mgrdept:
+Content-Type: application/json
+
+{
+  "decision": "Approved",
+  "remarks": "Approved by reporting manager"
+}
+
+###
+PATCH http://localhost:4004/odata/v4/leave/LeaveApprovals(2778c8fa-4dd6-471c-b33f-6ea52955e1c5)
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{
+  "decision": "Approved",
+  "remarks": "Final HR approval"
+}
+
+###
+GET http://localhost:4004/odata/v4/leave/LeaveRequests(7e6c0b82-5050-4387-b96f-a25fecddcbf9)
+Authorization: Basic empjohn:
+
+###
+GET http://localhost:4004/odata/v4/leave/LeaveBalances?$filter=employee_ID eq 10000000-0000-0000-0000-000000000001 and leaveType_ID eq 7a000000-0000-0000-0000-000000000001
+Authorization: Basic empjohn:
+
+###
+GET http://localhost:4004/odata/v4/attendance/Attendances?$filter=attendanceDate eq 2026-10-01
+Authorization: Basic empjohn:
+
+
+###
+POST http://localhost:4004/odata/v4/leave/LeaveRequests
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{
+  "employee_ID":"10000000-0000-0000-0000-000000000001",
+  "leaveType_ID":"7a000000-0000-0000-0000-000000000001",
+  "fromDate":"2026-11-05",
+  "toDate":"2026-11-06",
+  "reason":"Verifying totalDays and pendingDays fix"
+}
+
+###
+POST http://localhost:4004/odata/v4/leave/LeaveRequests
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{
+  "employee_ID":"10000000-0000-0000-0000-000000000001",
+  "leaveType_ID":"7a000000-0000-0000-0000-000000000001",
+  "fromDate":"2026-11-21",
+  "toDate":"2026-11-22",
+  "reason":"Verifying totalDays and pendingDays fix"
+}
+
+###
+GET http://localhost:4004/odata/v4/leave/LeaveBalances?$filter=employee_ID eq 10000000-0000-0000-0000-000000000001 and leaveType_ID eq 7a000000-0000-0000-0000-000000000001
+Authorization: Basic empjohn:
+
+###
+GET http://localhost:4004/odata/v4/leave/LeaveApprovals?$filter=leaveRequest_ID eq 5f2f991b-7e2e-4972-baeb-6a72b150f340
+Authorization: Basic empjohn:
+
+###
+PATCH http://localhost:4004/odata/v4/leave/LeaveApprovals(<LEVEL1_APPROVAL_ID>)
+Authorization: Basic mgrdept:
+Content-Type: application/json
+
+{
+  "decision": "Approved",
+  "remarks": "Approved by reporting manager"
+}
+
+
+###
+PATCH http://localhost:4004/odata/v4/leave/LeaveApprovals(b91a7aaa-aa3c-4d0d-b724-b41c5f37ae64)
+Authorization: Basic mgrdept:
+Content-Type: application/json
+
+{
+  "decision": "Approved",
+  "remarks": "Approved by reporting manager"
+}
+
+###
+PATCH http://localhost:4004/odata/v4/leave/LeaveApprovals(00262392-3bc4-463c-8ec5-37631fdfb2aa)
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{
+  "decision": "Approved",
+  "remarks": "Final HR approval"
+}
+
+###
+GET http://localhost:4004/odata/v4/leave/LeaveBalances?$filter=employee_ID eq 10000000-0000-0000-0000-000000000001 and leaveType_ID eq 7a000000-0000-0000-0000-000000000001
+Authorization: Basic empjohn:
+
+###
+GET http://localhost:4004/odata/v4/leave/LeaveBalances?$filter=employee_ID eq 10000000-0000-0000-0000-000000000001 and leaveType_ID eq 7a000000-0000-0000-0000-000000000001
+Authorization: Basic empjohn:
+
+###
+POST http://localhost:4004/odata/v4/leave/LeaveRequests
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{
+  "employee_ID":"10000000-0000-0000-0000-000000000001",
+  "leaveType_ID":"7a000000-0000-0000-0000-000000000001",
+  "fromDate":"2026-12-07",
+  "toDate":"2026-12-08",
+  "reason":"Verifying totalDays and pendingDays fix"
+}
+
+###
+PATCH http://localhost:4004/odata/v4/leave/LeaveBalances(7c000000-0000-0000-0000-000000000001)
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{
+  "usedDays": 2.00,
+  "pendingDays": 1.00
+}
+
+###
+POST http://localhost:4004/odata/v4/leave/LeaveRequests
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{
+  "employee_ID":"10000000-0000-0000-0000-000000000001",
+  "leaveType_ID":"7a000000-0000-0000-0000-000000000001",
+  "fromDate":"2026-12-14",
+  "toDate":"2026-12-15",
+  "reason":"Verifying totalDays and pendingDays fix"
+}
+
+###
+GET http://localhost:4004/odata/v4/leave/LeaveBalances?$filter=employee_ID eq 10000000-0000-0000-0000-000000000001 and leaveType_ID eq 7a000000-0000-0000-0000-000000000001
+Authorization: Basic empjohn:
+
+###
+GET http://localhost:4004/odata/v4/leave/LeaveApprovals?$filter=leaveRequest_ID eq f18913ae-3f83-402e-955e-c9cc0a6e74d4
+Authorization: Basic empjohn:
+
+###
+PATCH http://localhost:4004/odata/v4/leave/LeaveApprovals(385a8855-e0cf-492c-ac31-f578ce69dfae)
+Authorization: Basic mgrdept:
+Content-Type: application/json
+
+{
+  "decision": "Approved",
+  "remarks": "Approved by reporting manager"
+}
+
+###
+PATCH http://localhost:4004/odata/v4/leave/LeaveApprovals(c1094f38-9942-48ef-93af-2f2b7aeda6d9)
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{
+  "decision": "Approved",
+  "remarks": "Final HR approval"
+}
+
+###
+GET http://localhost:4004/odata/v4/leave/LeaveBalances?$filter=employee_ID eq 10000000-0000-0000-0000-000000000001 and leaveType_ID eq 7a000000-0000-0000-0000-000000000001
+Authorization: Basic empjohn:
+
+###
+GET http://localhost:4004/odata/v4/leave/LeaveRequests(f18913ae-3f83-402e-955e-c9cc0a6e74d4)
+Authorization: Basic empjohn:
+
+###
+GET http://localhost:4004/odata/v4/attendance/Attendances?$filter=attendanceDate eq 2026-12-14
+Authorization: Basic empjohn:
+
+###
+POST http://localhost:4004/odata/v4/leave/LeaveRequests
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{
+  "employee_ID":"10000000-0000-0000-0000-000000000001",
+  "leaveType_ID":"7a000000-0000-0000-0000-000000000001",
+  "fromDate":"2026-12-21",
+  "toDate":"2026-12-22",
+  "reason":"Testing cancel flow"
+}
+
+###
+GET http://localhost:4004/odata/v4/leave/LeaveBalances?$filter=employee_ID eq 10000000-0000-0000-0000-000000000001 and leaveType_ID eq 7a000000-0000-0000-0000-000000000001
+Authorization: Basic empjohn:
+
+###
+PATCH http://localhost:4004/odata/v4/leave/LeaveRequests(1a8ccd1c-6423-4d52-83a8-b06a2829ce4e)
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{
+  "status": "Cancelled"
+}
+
+###
+GET http://localhost:4004/odata/v4/leave/LeaveBalances?$filter=employee_ID eq 10000000-0000-0000-0000-000000000001 and leaveType_ID eq 7a000000-0000-0000-0000-000000000001
+Authorization: Basic empjohn:
+
+###
+PATCH http://localhost:4004/odata/v4/leave/LeaveRequests(1a8ccd1c-6423-4d52-83a8-b06a2829ce4e)
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{
+  "status": "Approved"
+}
+
+
+
+
 # ===========================================================
 
 

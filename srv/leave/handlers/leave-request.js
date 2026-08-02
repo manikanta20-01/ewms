@@ -1,5 +1,5 @@
 const cds = require("@sap/cds");
-const { SELECT, INSERT } = cds.ql;
+const { SELECT, INSERT, UPDATE } = cds.ql;
 const { required } = require("../../common/utils/validation");
 const { generateCode } = require("../../common/utils/code-generator");
 
@@ -10,6 +10,7 @@ module.exports = (srv) => {
   // CREATE - Validation & Auto-Enrichment
   // ============================================================
   srv.before("CREATE", "LeaveRequests", async (req) => {
+    const tx = cds.transaction(req);
     const { employee_ID, leaveType_ID, fromDate, toDate } = req.data;
 
     // 1. Mandatory Fields Presence Validation
@@ -27,14 +28,14 @@ module.exports = (srv) => {
     }
 
     // 3. Existential Integrity Lookups
-    const employeeExists = await req.run(
+    const employeeExists = await tx.run(
       SELECT.one.from("ewms.db.employee.Employee").where({ ID: employee_ID }),
     );
     if (!employeeExists) {
       return req.error(404, "Target Employee record does not exist.");
     }
 
-    const leaveTypeExists = await req.run(
+    const leaveTypeExists = await tx.run(
       SELECT.one
         .from(LeaveTypes || "ewms.db.leave.LeaveType")
         .where({ ID: leaveType_ID, status: "Active" }),
@@ -47,7 +48,7 @@ module.exports = (srv) => {
     }
 
     // 4. Overlap Protection Guardrail
-    const overlappingRequest = await req.run(
+    const overlappingRequest = await tx.run(
       SELECT.one.from(LeaveRequests || "ewms.db.leave.LeaveRequest").where({
         employee_ID,
         status: { "!=": "Cancelled" },
@@ -66,6 +67,20 @@ module.exports = (srv) => {
     // 5. Transactional Metadata Enrichment
     req.data.status = req.data.status || "Pending";
     req.data.appliedOn = new Date().toISOString();
+
+    // Total Days Calculation: half-day requests are always 0.5 days;
+    // otherwise count inclusive calendar days between fromDate and toDate.
+    if (req.data.halfDay) {
+      req.data.totalDays = 0.5;
+    } else {
+      const msPerDay = 24 * 60 * 60 * 1000;
+      const diffDays =
+        Math.round(
+          (new Date(toDate).getTime() - new Date(fromDate).getTime()) /
+            msPerDay,
+        ) + 1;
+      req.data.totalDays = diffDays;
+    }
 
     req.data.leaveNumber = await generateCode(
       req,
@@ -86,6 +101,20 @@ module.exports = (srv) => {
 
     for (const rec of records) {
       if (!rec.ID) continue;
+
+      // Reserve the requested days against the employee's leave balance
+      if (rec.totalDays != null) {
+        const leaveYear = new Date(rec.fromDate).getFullYear();
+        await tx.run(
+          UPDATE("ewms.db.leave.LeaveBalance")
+            .set({ pendingDays: { "+=": rec.totalDays } })
+            .where({
+              employee_ID: rec.employee_ID,
+              leaveType_ID: rec.leaveType_ID,
+              year: leaveYear,
+            }),
+        );
+      }
 
       // Level 1 approver: employee's active reporting manager
       const assignment = await tx.run(
@@ -133,12 +162,13 @@ module.exports = (srv) => {
   // UPDATE - Strict Parameter Guardrails & State Transitions
   // ============================================================
   srv.before("UPDATE", "LeaveRequests", async (req) => {
+    const tx = cds.transaction(req);
     const targetId = req.data.ID || req.params?.[0]?.ID || req.params?.[0];
 
     if (!targetId) return;
 
     // Fetch live state record from database
-    const currentRecord = await req.run(
+    const currentRecord = await tx.run(
       SELECT.one
         .from(LeaveRequests || "ewms.db.leave.LeaveRequest")
         .where({ ID: targetId }),
@@ -171,11 +201,12 @@ module.exports = (srv) => {
   // DELETE - Decoupling Safety Checks
   // ============================================================
   srv.before("DELETE", "LeaveRequests", async (req) => {
+    const tx = cds.transaction(req);
     const targetId = req.data?.ID || req.params?.[0]?.ID || req.params?.[0];
 
     if (!targetId) return;
 
-    const targetRecord = await req.run(
+    const targetRecord = await tx.run(
       SELECT.one
         .from(LeaveRequests || "ewms.db.leave.LeaveRequest")
         .where({ ID: targetId }),

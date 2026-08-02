@@ -1,6 +1,7 @@
 const cds = require("@sap/cds");
+const { INSERT } = cds.ql;
 
-module.exports = (srv) => {
+function registerAuditHooks(srv) {
   const entities = Object.keys(srv.entities);
 
   entities.forEach((entity) => {
@@ -16,7 +17,7 @@ module.exports = (srv) => {
       console.log(`Deleted ${entity} : ${data.ID}`);
     });
   });
-};
+}
 
 // ===================== AUTH ==========================
 
@@ -49,7 +50,9 @@ module.exports = async function persistAudit(
   };
 
   if (TRANSACTIONAL) {
-    await req.run(INSERT.into("ewms.db.common.AuditLogs").entries(entry));
+    await cds
+      .tx(req)
+      .run(INSERT.into("ewms.db.common.AuditLogs").entries(entry));
   } else {
     try {
       await cds
@@ -60,3 +63,5 @@ module.exports = async function persistAudit(
     }
   }
 };
+
+module.exports.registerAuditHooks = registerAuditHooks;
