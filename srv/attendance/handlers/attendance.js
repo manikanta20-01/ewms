@@ -2,83 +2,74 @@ const cds = require("@sap/cds");
 const { SELECT } = cds.ql;
 
 module.exports = (srv) => {
-  const { Employee, Attendance, WorkSchedule, ShiftAssignment, Shift } =
-    srv.entities;
-  srv.before("CREATE", "Attendance", async (req) => {
+  // IMPORTANT: bind against the actual local entity objects from this
+  // service's srv.entities (e.g. "Attendances", not the db entity name
+  // "Attendance"). Passing the resolved entity object rather than a
+  // string keeps the handler wired even if the projected name changes.
+  const { Attendances, Shifts, WorkSchedules, ShiftAssignments } = srv.entities;
+
+  const timeToMinutes = (t) => {
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + m;
+  };
+
+  // ============================================================
+  // CREATE - Check-In
+  // ============================================================
+  srv.before("CREATE", Attendances, async (req) => {
     const tx = cds.transaction(req);
+    const { employee_ID, attendanceDate, checkIn } = req.data;
 
-    if (!req.data.employee_ID) {
-      req.error(400, "Employee is required");
-    }
+    if (!employee_ID) return req.error(400, "Employee is required");
+    if (!attendanceDate) return req.error(400, "Attendance date is required");
+    if (!checkIn) return req.error(400, "Employee check-in time is required");
 
-    if (!req.data.attendanceDate) {
-      req.error(400, "Attendance date is required");
-    }
-
-    if (!req.data.checkIn) {
-      req.error(400, "EMployee check In is required");
-    }
-
-    // check employee exists
+    // Employee existence check (AttendanceService doesn't project Employee,
+    // so query the underlying db entity directly)
     const employee = await tx.run(
-      SELECT.one.from(Employee).where({
-        ID: req.data.employee_ID,
-      }),
+      SELECT.one.from("ewms.db.employee.Employee").where({ ID: employee_ID }),
     );
+    if (!employee) return req.error(404, "Employee does not exist.");
 
-    if (!employee) return req.error(400, "Employee is not exists");
-
-    // Duplicate Attendance Validation
-    const exisitingAttendance = await tx.run(
-      SELECT.one.from(Attendance).where({
-        employee_ID: req.data.employee_ID,
-        attendanceDate: req.data.attendanceDate,
-      }),
+    // Duplicate attendance guard
+    const existingAttendance = await tx.run(
+      SELECT.one.from(Attendances).where({ employee_ID, attendanceDate }),
     );
-
-    if (exisitingAttendance)
+    if (existingAttendance) {
       return req.error(
         400,
         "Attendance has already been marked for this employee on the selected date.",
       );
+    }
 
-    // ==================
-    // Find Employee Shift
-    // ==================
-
+    // --------------------------------------------------------
+    // Resolve the shift for this attendance date
+    // --------------------------------------------------------
     let shiftId = null;
 
-    // Step 1 - Check Work Schedule
-
+    // Step 1 - explicit per-day WorkSchedule override
     const workSchedule = await tx.run(
-      SELECT.one.from(WorkSchedule).where({
-        employee_ID: req.data.employee_ID,
-        scheduleDate: req.data.attendanceDate,
-      }),
+      SELECT.one
+        .from(WorkSchedules)
+        .where({ employee_ID, scheduleDate: attendanceDate }),
     );
 
     if (workSchedule) {
       shiftId = workSchedule.shift_ID;
     } else {
-      // Step 2 - Find Active Shift Assignment
+      // Step 2 - fall back to the employee's active shift assignment
+      // that covers this date
+      const assignments = await tx.run(
+        SELECT.from(ShiftAssignments).where({ employee_ID }),
+      );
 
-      const shiftAssignment = await tx.run(
-        SELECT.one.from(ShiftAssignment).where({
-          employee_ID: req.data.employee_ID,
-        }),
+      const shiftAssignment = assignments.find(
+        (a) =>
+          attendanceDate >= a.effectiveFrom &&
+          (!a.effectiveTo || attendanceDate <= a.effectiveTo),
       );
 
       if (!shiftAssignment) {
-        return req.error(400, "No shift assigned for employee.");
-      }
-
-      // Step 3 - Validate Assignment Date
-
-      if (
-        req.data.attendanceDate < shiftAssignment.effectiveFrom ||
-        (shiftAssignment.effectiveTo &&
-          req.data.attendanceDate > shiftAssignment.effectiveTo)
-      ) {
         return req.error(
           400,
           "No active shift assignment found for the attendance date.",
@@ -88,171 +79,112 @@ module.exports = (srv) => {
       shiftId = shiftAssignment.shift_ID;
     }
 
-    // Step 4 - Save Shift in Attendance
-
     req.data.shift_ID = shiftId;
 
-    // ==================
-    // Get Shift Details
-    // ==================
+    // --------------------------------------------------------
+    // Calculate late minutes against the resolved shift
+    // --------------------------------------------------------
+    const shift = await tx.run(SELECT.one.from(Shifts).where({ ID: shiftId }));
+    if (!shift) return req.error(404, "Assigned shift was not found.");
 
-    const shift = await tx.run(
-      SELECT.one.from(Shift).where({
-        ID: shift_ID,
-      }),
+    const shiftStartMinutes = timeToMinutes(shift.startTime);
+    const checkInMinutes = timeToMinutes(checkIn);
+    const allowedCheckInMinutes =
+      shiftStartMinutes + (shift.graceInMinutes || 0);
+
+    req.data.lateMinutes = Math.max(0, checkInMinutes - allowedCheckInMinutes);
+
+    // --------------------------------------------------------
+    // Work location + initial status
+    // --------------------------------------------------------
+    req.data.workLocation = req.data.workLocation || "Office";
+    req.data.attendanceStatus =
+      req.data.workLocation === "WorkFromHome" ? "WorkFromHome" : "Present";
+  });
+
+  // ============================================================
+  // UPDATE - Check-Out
+  // ============================================================
+  srv.before("UPDATE", Attendances, async (req) => {
+    const tx = cds.transaction(req);
+    const targetId = req.data.ID || req.params?.[0]?.ID || req.params?.[0];
+
+    if (!targetId) return;
+
+    const attendance = await tx.run(
+      SELECT.one.from(Attendances).where({ ID: targetId }),
     );
-    if (!shift) return req.error(400, "Assigned shift is not found");
+    if (!attendance) return req.error(404, "Attendance record not found.");
 
-    // ==================
-    // Calculate Late Minutes
-    // ==================
-    // shift start time
-    const [shiftHour, shiftMinute] = shift.startTime.split(":").map(Number);
-    const shiftStartMinutes = shiftHour * 60 + shiftMinute;
+    // System-owned / immutable fields
+    if ("employee_ID" in req.data)
+      return req.error(400, "Employee cannot be modified.");
+    if ("attendanceDate" in req.data)
+      return req.error(400, "Attendance date cannot be modified.");
+    if ("shift_ID" in req.data)
+      return req.error(400, "Shift cannot be modified.");
+    if ("workLocation" in req.data)
+      return req.error(400, "Work location cannot be modified after check-in.");
+    if ("workedHours" in req.data)
+      return req.error(400, "Worked hours is system calculated.");
+    if ("lateMinutes" in req.data)
+      return req.error(400, "Late minutes is system calculated.");
+    if ("earlyLeavingMinutes" in req.data)
+      return req.error(400, "Early leaving minutes is system calculated.");
 
-    // employee check in time
-    const [checkInHour, checkInMinute] = req.data.checkIn
-      .split(":")
-      .map(Number);
-    checkInMinute = checkInHour * 60 + checkInMinute;
+    // Only proceed with checkout math if a checkOut is actually being set
+    if (!("checkOut" in req.data)) return;
 
-    // Allowed check time
-    const allowedCheckIn = shiftStartMinutes + (shift.graceInMinutes || 0);
+    if (!req.data.checkOut)
+      return req.error(400, "Check-out time is required.");
+    if (attendance.checkOut)
+      return req.error(400, "Employee has already checked out.");
+    if (!attendance.checkIn)
+      return req.error(400, "Employee has not checked in.");
 
-    // Late minutes
-    const lateMinutes = checkInMinute - allowedCheckIn;
+    const checkInMinutes = timeToMinutes(attendance.checkIn);
+    const checkOutMinutes = timeToMinutes(req.data.checkOut);
 
-    if (lateMinutes < 0) {
-      lateMinutes = 0;
+    if (checkOutMinutes <= checkInMinutes) {
+      return req.error(400, "Check-out time must be later than check-in time.");
     }
 
-    // save calculated values
-    req.data.shift_ID = shiftId;
-    req.data.attendanceDate = attendanceDate;
-    req.data.attendanceStatus = "Present";
+    const totalMinutes = checkOutMinutes - checkInMinutes;
+    const totalWorkedHours = Number((totalMinutes / 60).toFixed(2));
+    req.data.workedHours = totalWorkedHours;
 
-    // ==================
-    // UPDATE
-    // ==================
+    const shift = await tx.run(
+      SELECT.one.from(Shifts).where({ ID: attendance.shift_ID }),
+    );
+    if (!shift) return req.error(404, "Assigned shift was not found.");
 
-    srv.before("UPDATE", "Attendance", async (req) => {
-      const tx = cds.transaction(req);
+    const shiftEndMinutes = timeToMinutes(shift.endTime);
+    req.data.earlyLeavingMinutes = Math.max(
+      0,
+      shiftEndMinutes - checkOutMinutes,
+    );
 
-      // Check attendance Exists
-      const attendance = await tx.run(
-        SELECT.one.from(Attendance).where({ ID: req.data.ID }),
-      );
-
-      if (!attendance) return req.error(400, "Attendance record not found.");
-
-      if ("employee_ID" in req.data)
-        return req.error(400, "Employee cannot be modified.");
-
-      if ("attendanceDate" in req.data)
-        return req.error(400, "Attendance Date cannot be modified.");
-
-      if ("shift_ID" in req.data)
-        return req.error(400, "Shift cannot be modified.");
-
-      if ("workedHours" in req.data)
-        return req.error(400, "Worked Hours is system calculated.");
-
-      if ("lateMinutes" in req.data)
-        return req.error(400, "Late Minutes is system calculated.");
-
-      if ("earlyLeavingMinutes" in req.data)
-        return req.error(400, "Early Leaving Minutes is system calculated.");
-
-      // check out required
-      if (!req.data.checkOut)
-        return req.error(400, "Check out time is required");
-
-      // Already check out
-      if (attendance.checkOut)
-        return req.error(400, "Employee has already checkout");
-
-      // check in required
-      if (!attendance.checkIn)
-        return req.error(400, "Employee has not checked in.");
-
-      // ===============================
-      // Convert check In into minutes
-      // ===============================
-      const [checkInHour, checkInMinute] = req.data.checkIn
-        .split(":")
-        .map(Number);
-
-      const checkInMinutes = checkInHour * 60 + checkInMinute;
-
-      // ===============================
-      // Convert check Out into minutes
-      // ===============================
-      const [checkOutHour, checkOutMinute] = req.data.checkOut
-        .split(":")
-        .map(Number);
-
-      const checkOutMinutes = checkOutHour * 60 + checkOutMinute;
-
-      // Validate Time
-      if (checkOutMinutes <= checkInMinutes)
-        return req.error(
-          400,
-          "Check Out time must be greater than Check In time.",
-        );
-
-      // --------------------------
-      // Calculate Worked Hours
-      // --------------------------
-
-      const totalMinutes = checkOutMinutes - checkInMinutes;
-
-      const totalWorkedHours = Number((totalMinutes / 60).toFixed(2));
-
-      req.data.workedHours = totalWorkedHours;
-
-      // --------------------------
-      // Load Shift
-      // --------------------------
-
-      const shift = await tx.run(
-        SELECT.one.from(Shift).where({ ID: attendance.shift_ID }),
-      );
-
-      if (!shift) return req.error(400, "Assigned shift not assign");
-
-      // --------------------------
-      // Calculate Early Leaving
-      // --------------------------
-
-      const [endHour, endMinute] = shift.endTime.split(":").map(Number);
-
-      const shiftEndMinutes = endHour * 60 + endMinute;
-
-      let earlyLeavingMinutes = shiftEndMinutes - checkOutMinutes;
-
-      if (earlyLeavingMinutes < 0) earlyLeavingMinutes = 0;
-
-      req.data.earlyLeavingMinutes = earlyLeavingMinutes;
-
-      // --------------------------
-      // Attendance Status
-      // --------------------------
-
-      if (
-        attendance.attendanceStatus !== "Holiday" &&
-        attendance.attendanceStatus !== "Leave"
-      ) {
-        if (totalWorkedHours >= 8) {
-          req.data.attendanceStatus = "Present";
-        } else if (totalWorkedHours >= 4) {
-          req.data.attendanceStatus = "HalfDay";
-        } else {
-          req.data.attendanceStatus = "Absent";
-        }
+    // Recompute final status from worked hours, preserving Holiday/Leave
+    // and the WFH/Office distinction captured at check-in.
+    if (
+      attendance.attendanceStatus !== "Holiday" &&
+      attendance.attendanceStatus !== "Leave"
+    ) {
+      const isWFH = attendance.workLocation === "WorkFromHome";
+      if (totalWorkedHours >= 8) {
+        req.data.attendanceStatus = isWFH ? "WorkFromHome" : "Present";
+      } else if (totalWorkedHours >= 4) {
+        req.data.attendanceStatus = "HalfDay";
+      } else {
+        req.data.attendanceStatus = "Absent";
       }
-    });
-    srv.before("DELETE", "Attendance", async (req) => {
-      return req.error(400, "Attendance records cannot be deleted.");
-    });
+    }
+  });
+
+  // ============================================================
+  // DELETE - Attendance records are immutable once created
+  // ============================================================
+  srv.before("DELETE", Attendances, async (req) => {
+    return req.error(400, "Attendance records cannot be deleted.");
   });
 };

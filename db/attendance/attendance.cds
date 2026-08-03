@@ -15,6 +15,7 @@ entity Attendance : managed {
     shift : Association to Shift;
     checkIn : Time;
     checkOut : Time;
+    workLocation : enums.WorkLocation default 'Office';
     workedHours : Decimal(5, 2);
     // breakHours : Decimal(5, 2) default 0;
     lateMinutes : Integer default 0;

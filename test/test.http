@@ -353,6 +353,145 @@ Content-Type: application/json
 }
 
 
+### =========================================================================
+### EWMS - ATTENDANCE: CHECK-IN / CHECK-OUT LOCAL REST SIMULATION
+### =========================================================================
+@server = http://localhost:4004
+@service = odata/v4/attendance
+
+### Seeded reference data (from db/data/*.csv, resets on every `cds deploy`)
+@empJohn = 10000000-0000-0000-0000-000000000001
+@officeShift = 20000000-0000-0000-0000-000000000001
+
+### -------------------------------------------------------------------------
+### 1. SELF CHECK-IN as the employee (empjohn), Office, 20 min late
+###    Shift 20000000-...-01 starts 09:00, graceInMinutes: 10 -> cutoff 09:10
+###    Checking in at 09:20 -> lateMinutes should be 10
+### -------------------------------------------------------------------------
+# @name checkIn
+POST {{server}}/{{service}}/Attendances
+Content-Type: application/json
+Authorization: Basic empjohn:
+
+{
+  "employee_ID": "{{empJohn}}",
+  "attendanceDate": "2026-08-10",
+  "checkIn": "09:20:00",
+  "workLocation": "Office"
+}
+
+### -------------------------------------------------------------------------
+### 2. Read it back - confirm shift_ID resolved, lateMinutes: 10,
+###    attendanceStatus: "Present"
+### -------------------------------------------------------------------------
+GET {{server}}/{{service}}/Attendances?$filter=employee_ID eq {{empJohn}} and attendanceDate eq 2026-08-10
+Authorization: Basic empjohn:
+
+### -------------------------------------------------------------------------
+### 3. Duplicate check-in same day -> should FAIL with 400
+### -------------------------------------------------------------------------
+POST {{server}}/{{service}}/Attendances
+Content-Type: application/json
+Authorization: Basic empjohn:
+
+{
+  "employee_ID": "{{empJohn}}",
+  "attendanceDate": "2026-08-10",
+  "checkIn": "10:00:00"
+}
+
+### -------------------------------------------------------------------------
+### 4. Missing checkIn -> should FAIL with 400
+### -------------------------------------------------------------------------
+POST {{server}}/{{service}}/Attendances
+Content-Type: application/json
+Authorization: Basic empjohn:
+
+{
+  "employee_ID": "{{empJohn}}",
+  "attendanceDate": "2026-08-11"
+}
+
+### -------------------------------------------------------------------------
+### 5. CHECK-OUT - replace the ID below with the ID returned from step 1's
+###    response (or from step 2's GET)
+### -------------------------------------------------------------------------
+@attendanceId = 856a4d7d-4164-4c84-a011-c655f5d62bfb
+
+PATCH {{server}}/{{service}}/Attendances({{attendanceId}})
+Content-Type: application/json
+Authorization: Basic empjohn:
+
+{
+  "checkOut": "18:00:00"
+}
+
+### -------------------------------------------------------------------------
+### 6. Double checkout -> should FAIL with 400
+### -------------------------------------------------------------------------
+PATCH {{server}}/{{service}}/Attendances({{attendanceId}})
+Content-Type: application/json
+Authorization: Basic empjohn:
+
+{
+  "checkOut": "19:00:00"
+}
+
+### -------------------------------------------------------------------------
+### 7. DELETE -> should ALWAYS FAIL with 400 (attendance is immutable)
+### -------------------------------------------------------------------------
+DELETE {{server}}/{{service}}/Attendances({{attendanceId}})
+Authorization: Basic hrperson:
+
+### -------------------------------------------------------------------------
+### 8. WORK-FROM-HOME self check-in, on a fresh date, on time
+### -------------------------------------------------------------------------
+POST {{server}}/{{service}}/Attendances
+Content-Type: application/json
+Authorization: Basic empjohn:
+
+{
+  "employee_ID": "{{empJohn}}",
+  "attendanceDate": "2026-08-12",
+  "checkIn": "09:05:00",
+  "workLocation": "WorkFromHome"
+}
+
+### -------------------------------------------------------------------------
+### 9. CROSS-EMPLOYEE CHECK - empjohn tries to mark attendance for someone
+###    else (mgrdept's employee id below) -> should FAIL with 403
+###    (self-check-in is scoped to employee_ID = $user.employeeId)
+### -------------------------------------------------------------------------
+POST {{server}}/{{service}}/Attendances
+Content-Type: application/json
+Authorization: Basic empjohn:
+
+{
+  "employee_ID": "10000000-0000-0000-0000-000000000004",
+  "attendanceDate": "2026-08-12",
+  "checkIn": "09:00:00"
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # ===========================================================

@@ -1,0 +1,404 @@
+### ===================================================================
+### EWMS — WORKFLOW CALLS FOR NON-PAYROLL SERVICES
+### (Leave, Attendance, Employee, Project, Team, Organization)
+### ===================================================================
+### IMPORTANT — read before using this file:
+### Unlike PayrollService, these services define NO bound OData
+### actions (confirmed: no "action ..." in their .cds files, no
+### this.on("SomeAction", ...) handlers in their .js files).
+###
+### Workflows like "approve leave", "check in/out", "approve overtime"
+### are implemented as plain OData CRUD — specifically PATCH requests
+### that update a status/decision field on the relevant entity. There
+### is no ".../LeaveRequests('id')/LeaveService.Approve" endpoint;
+### you PATCH the LeaveApprovals or LeaveRequests record directly.
+###
+### Each block below documents: the entity, the field being changed,
+### who's allowed to change it (from *-security.cds @restrict rules),
+### and a positive + negative role test case.
+### ===================================================================
+
+
+### ===================================================================
+### MODULE: LEAVE  (base: /odata/v4/leave)
+### ===================================================================
+@leaveUrl = http://localhost:4004/odata/v4/leave
+@leaveRequestId = 7d000000-0000-0000-0000-000000000002
+@leaveApprovalId = 7e000000-0000-0000-0000-000000000002
+
+### -------------------------------------------------------------------
+### WORKFLOW 1: Approve a Leave Request
+### Entity   : LeaveApprovals
+### Field    : decision  (Pending -> Approved)
+### Allowed  : DepartmentManager, HRExecutive, HRAdmin, SystemAdmin
+### Expected : 200 for mgrdept/hrperson, 403 for empjohn (employee
+###            can only READ their own approval, not write it)
+### -------------------------------------------------------------------
+
+### 1.1 Approve Leave — as DepartmentManager (expect 200)
+PATCH {{leaveUrl}}/LeaveApprovals('{{leaveApprovalId}}')
+Authorization: Basic mgrdept:
+Content-Type: application/json
+
+{
+  "decision": "Approved",
+  "decisionDate": "2026-08-02T12:00:00Z",
+  "remarks": "Approved — coverage confirmed"
+}
+
+### 1.2 Approve Leave — as Employee (expect 403 Forbidden)
+PATCH {{leaveUrl}}/LeaveApprovals('{{leaveApprovalId}}')
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{
+  "decision": "Approved"
+}
+
+
+### -------------------------------------------------------------------
+### WORKFLOW 2: Reject a Leave Request
+### Entity   : LeaveApprovals
+### Field    : decision  (Pending -> Rejected)
+### Allowed  : DepartmentManager, HRExecutive, HRAdmin, SystemAdmin
+### Expected : 200 for hrperson, 403 for empjohn
+### -------------------------------------------------------------------
+
+### 2.1 Reject Leave — as HRAdmin (expect 200)
+PATCH {{leaveUrl}}/LeaveApprovals('{{leaveApprovalId}}')
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{
+  "decision": "Rejected",
+  "decisionDate": "2026-08-02T12:05:00Z",
+  "remarks": "Insufficient notice period"
+}
+
+
+### -------------------------------------------------------------------
+### WORKFLOW 3: Update Leave Request Status (parent record)
+### Entity   : LeaveRequests
+### Field    : status  (Draft/Pending -> TeamApproved/HRApproved/
+###            Rejected/Cancelled)
+### Allowed  : Employee (own record, limited fields),
+###            DepartmentManager (scoped to dept), HRAdmin, SystemAdmin
+### Expected : 200 for the employee cancelling their own request,
+###            200 for HRAdmin approving (business-rule enforcement
+###            happens in the handler, not shown here — @restrict
+###            only gates entity-level access)
+### -------------------------------------------------------------------
+
+### 3.1 Employee Cancels Own Pending Leave Request (expect 200)
+PATCH {{leaveUrl}}/LeaveRequests('{{leaveRequestId}}')
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{
+  "status": "Cancelled",
+  "remarks": "Plans changed"
+}
+
+### 3.2 HRAdmin Marks Leave Request HR-Approved (expect 200)
+PATCH {{leaveUrl}}/LeaveRequests('{{leaveRequestId}}')
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{
+  "status": "HRApproved"
+}
+
+
+### -------------------------------------------------------------------
+### WORKFLOW 4: Create Leave Request (Apply for Leave)
+### Entity   : LeaveRequests
+### Allowed  : Employee (own), HRAdmin, SystemAdmin
+### Expected : 201 for empjohn
+### -------------------------------------------------------------------
+
+### 4.1 Employee Applies for Leave (expect 201)
+POST {{leaveUrl}}/LeaveRequests
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{
+  "employee_ID": "10000000-0000-0000-0000-000000000001",
+  "leaveType_ID": "7a000000-0000-0000-0000-000000000001",
+  "fromDate": "2026-09-20",
+  "toDate": "2026-09-21",
+  "totalDays": 2.00,
+  "reason": "Personal work",
+  "status": "Draft"
+}
+
+
+### ===================================================================
+### MODULE: ATTENDANCE  (base: /odata/v4/attendance)
+### ===================================================================
+@attUrl = http://localhost:4004/odata/v4/attendance
+@attendanceId = 50000000-0000-0000-0000-000000000001
+@overtimeId = 60000000-0000-0000-0000-000000000001
+
+### -------------------------------------------------------------------
+### WORKFLOW 5: Check-In (create today's attendance record)
+### Entity   : Attendances
+### Allowed  : Employee (own, employee_ID = $user.employeeId),
+###            HRAdmin, SystemAdmin
+### Expected : 201 for empjohn
+### -------------------------------------------------------------------
+
+### 5.1 Employee Checks In (expect 201)
+POST {{attUrl}}/Attendances
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{
+  "employee_ID": "10000000-0000-0000-0000-000000000001",
+  "attendanceDate": "2026-08-02",
+  "shift_ID": "20000000-0000-0000-0000-000000000001",
+  "checkIn": "09:00:00",
+  "attendanceStatus": "Present"
+}
+
+
+### -------------------------------------------------------------------
+### WORKFLOW 6: Check-Out (update today's attendance record)
+### Entity   : Attendances
+### Field    : checkOut, workedHours
+### Allowed  : Employee (own), DepartmentManager (dept scope, read+
+###            update), HRAdmin, SystemAdmin
+### Expected : 200 for empjohn updating their own row
+### -------------------------------------------------------------------
+
+### 6.1 Employee Checks Out (expect 200)
+PATCH {{attUrl}}/Attendances('{{attendanceId}}')
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{
+  "checkOut": "18:05:00",
+  "workedHours": 8.08
+}
+
+### 6.2 Employee Tries to Edit Someone Else's Attendance (expect 403/404)
+PATCH {{attUrl}}/Attendances('50000000-0000-0000-0000-000000000002')
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{
+  "checkOut": "18:05:00"
+}
+
+
+### -------------------------------------------------------------------
+### WORKFLOW 7: Request Overtime
+### Entity   : Overtimes
+### Field    : status  (default "Pending")
+### Allowed  : Employee (own, create+read), HRAdmin, SystemAdmin
+### Expected : 201 for empjohn
+### -------------------------------------------------------------------
+
+### 7.1 Employee Requests Overtime (expect 201)
+POST {{attUrl}}/Overtimes
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{
+  "employee_ID": "10000000-0000-0000-0000-000000000001",
+  "attendance_ID": "50000000-0000-0000-0000-000000000001",
+  "approvedHours": 2.00,
+  "reason": "Release deployment support",
+  "status": "Pending"
+}
+
+
+### -------------------------------------------------------------------
+### WORKFLOW 8: Approve Overtime
+### Entity   : Overtimes
+### Field    : status  (Pending -> Approved), approvedBy, approvedDate
+### Allowed  : DepartmentManager (read+update), HRAdmin, SystemAdmin
+### Expected : 200 for mgrdept, 403 for empjohn
+### -------------------------------------------------------------------
+
+### 8.1 Approve Overtime — as DepartmentManager (expect 200)
+PATCH {{attUrl}}/Overtimes('{{overtimeId}}')
+Authorization: Basic mgrdept:
+Content-Type: application/json
+
+{
+  "status": "Approved",
+  "approvedBy_ID": "10000000-0000-0000-0000-000000000004",
+  "approvedDate": "2026-08-02T19:30:00Z"
+}
+
+### 8.2 Approve Overtime — as Employee (expect 403 Forbidden)
+PATCH {{attUrl}}/Overtimes('{{overtimeId}}')
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{
+  "status": "Approved"
+}
+
+
+### ===================================================================
+### MODULE: EMPLOYEE  (base: /odata/v4/employee)
+### ===================================================================
+@empUrl = http://localhost:4004/odata/v4/employee
+@empAssignmentId = 20000000-0000-0000-0000-000000000001
+
+### -------------------------------------------------------------------
+### WORKFLOW 9: Reassign Employee (Transfer to New Project/Team)
+### Entity   : EmployeeAssignments
+### Allowed  : Read - DepartmentManager, ProjectManager, HRExecutive,
+###            HRAdmin, SystemAdmin;  Write (CRUD) - HRAdmin/SystemAdmin
+### Expected : 200 for hrperson, 403 for empjohn
+### -------------------------------------------------------------------
+
+### 9.1 HRAdmin Transfers Employee to New Project (expect 200)
+PATCH {{empUrl}}/EmployeeAssignments('{{empAssignmentId}}')
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{
+  "project_ID": "22222222-ffff-2222-ffff-222222222222",
+  "fromDate": "2026-08-15"
+}
+
+### 9.2 Employee Tries to Reassign Themselves (expect 403 Forbidden)
+PATCH {{empUrl}}/EmployeeAssignments('{{empAssignmentId}}')
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{
+  "project_ID": "22222222-ffff-2222-ffff-222222222222"
+}
+
+
+### -------------------------------------------------------------------
+### WORKFLOW 10: Verify an Employee Document
+### Entity   : Documents
+### Field    : verified, verifiedBy, verifiedOn
+### Allowed  : HRAdmin, SystemAdmin (update); Employee only owns
+###            create/read, not verification
+### Expected : 200 for hrperson, 403 for empjohn
+### -------------------------------------------------------------------
+
+### 10.1 HRAdmin Verifies Uploaded Document (expect 200)
+PATCH {{empUrl}}/Documents('00000000-0000-0000-0000-000000000001')
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{
+  "verified": true,
+  "verifiedBy": "hrperson",
+  "verifiedOn": "2026-08-02T10:00:00Z"
+}
+
+
+### ===================================================================
+### MODULE: PROJECT  (base: /odata/v4/project)
+### ===================================================================
+@projUrl = http://localhost:4004/odata/v4/project
+@projectId = 11111111-ffff-1111-ffff-111111111111
+
+### -------------------------------------------------------------------
+### WORKFLOW 11: Close a Project
+### Entity   : Projects
+### Field    : status  (Active -> Closed), actualEndDate
+### Allowed  : ProjectManager, HRAdmin, SystemAdmin
+### Expected : 200 for mgrproj, 403 for empjohn
+### -------------------------------------------------------------------
+
+### 11.1 ProjectManager Closes Project (expect 200)
+PATCH {{projUrl}}/Projects('{{projectId}}')
+Authorization: Basic mgrproj:
+Content-Type: application/json
+
+{
+  "status": "Closed",
+  "actualEndDate": "2026-08-02"
+}
+
+### 11.2 Employee Tries to Close Project (expect 403 Forbidden)
+PATCH {{projUrl}}/Projects('{{projectId}}')
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{
+  "status": "Closed"
+}
+
+
+### ===================================================================
+### MODULE: TEAM  (base: /odata/v4/team)
+### ===================================================================
+@teamUrl = http://localhost:4004/odata/v4/team
+@teamId = 11111111-7777-1111-7777-111111111111
+
+### -------------------------------------------------------------------
+### WORKFLOW 12: Assign a Team Manager
+### Entity   : TeamManagers
+### Allowed  : HRAdmin, SystemAdmin (CRUD); others read-only
+### Expected : 201 for hrperson
+### -------------------------------------------------------------------
+
+### 12.1 HRAdmin Assigns New Team Manager (expect 201)
+POST {{teamUrl}}/TeamManagers
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{
+  "team_ID": "{{teamId}}",
+  "employeeID_ID": "10000000-0000-0000-0000-000000000003",
+  "fromDate": "2026-08-02",
+  "isActive": true
+}
+
+
+### ===================================================================
+### MODULE: ORGANIZATION  (base: /odata/v4/organization)
+### ===================================================================
+@orgUrl = http://localhost:4004/odata/v4/organization
+@deptId = 44444444-dddd-4444-dddd-444444444444
+
+### -------------------------------------------------------------------
+### WORKFLOW 13: Assign a Department HR Owner
+### Entity   : DepartmentHRs
+### Allowed  : HRAdmin, SystemAdmin only (both read and write)
+### Expected : 201 for hrperson, 403 for mgrdept
+### -------------------------------------------------------------------
+
+### 13.1 HRAdmin Assigns Department HR (expect 201)
+POST {{orgUrl}}/DepartmentHRs
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{
+  "department_ID": "{{deptId}}",
+  "employee_ID": "10000000-0000-0000-0000-000000000005",
+  "fromDate": "2026-08-02",
+  "isActive": true
+}
+
+### 13.2 DepartmentManager Tries Same Call (expect 403 Forbidden)
+POST {{orgUrl}}/DepartmentHRs
+Authorization: Basic mgrdept:
+Content-Type: application/json
+
+{
+  "department_ID": "{{deptId}}",
+  "employee_ID": "10000000-0000-0000-0000-000000000005",
+  "fromDate": "2026-08-02",
+  "isActive": true
+}
+
+
+### ===================================================================
+### FOR COMPARISON: PayrollService — the one module with real bound
+### actions (see ewms-actions.http for the full 7-action suite):
+###   POST /odata/v4/payroll/PayrollPeriods('{id}')/PayrollService.ProcessPayroll
+###   POST /odata/v4/payroll/PayrollProcesses('{id}')/PayrollService.RejectPayroll
+###   POST /odata/v4/payroll/Payslips('{id}')/PayrollService.PublishPayslip
+###   ...etc.
+### ===================================================================

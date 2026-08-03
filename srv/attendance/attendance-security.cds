@@ -3,7 +3,7 @@ using AttendanceService from './attendance-service';
 annotate AttendanceService with @(requires: 'authenticated-user');
 
 annotate AttendanceService.Attendances with @restrict: [
-  { grant: ['READ'], to: ['Employee'], where: 'employee_ID = $user.employeeId' },
+  { grant: ['CREATE','READ','UPDATE'], to: ['Employee'], where: 'employee_ID = $user.employeeId' },
   { grant: ['READ','UPDATE'], to: ['DepartmentManager'], where: 'employee.assignments.project.department_ID = $user.departmentId' },
   { grant: ['CREATE','READ','UPDATE','DELETE'], to: ['HRAdmin','SystemAdmin'] }
 ];

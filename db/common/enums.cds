@@ -52,6 +52,12 @@ type AttendanceStatus : String enum {
     OnDuty;
 }
 
+// Where the employee checked in from
+type WorkLocation : String enum {
+    Office;
+    WorkFromHome;
+}
+
 type LeaveType : String enum {
     Casual;
     Sick;

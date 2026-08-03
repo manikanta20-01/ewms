@@ -161,6 +161,25 @@ module.exports = (srv) => {
   // ============================================================
   // UPDATE - Strict Parameter Guardrails & State Transitions
   // ============================================================
+
+  // Statuses that legally exist on a Leave Request at runtime.
+  // (Approval progression itself is only ever driven by leave-approval.js
+  // via the LeaveApprovals workflow entity - never directly via LeaveRequests.)
+  const TERMINAL_STATUSES = ["Rejected", "Cancelled"];
+
+  // Direct PATCHes to LeaveRequests.status are only allowed to move a
+  // request into "Cancelled". Every other transition (Pending -> Approved,
+  // Pending -> Rejected, etc.) must happen through the LeaveApprovals
+  // workflow so that approver identity, level sequencing and history are
+  // preserved.
+  function isDirectTransitionAllowed(fromStatus, toStatus) {
+    if (fromStatus === toStatus) return true; // no-op, nothing to guard
+    if (toStatus === "Cancelled") {
+      return !TERMINAL_STATUSES.includes(fromStatus);
+    }
+    return false;
+  }
+
   srv.before("UPDATE", "LeaveRequests", async (req) => {
     const tx = cds.transaction(req);
     const targetId = req.data.ID || req.params?.[0]?.ID || req.params?.[0];
@@ -194,6 +213,81 @@ module.exports = (srv) => {
           "Modifying foundational transactional parameters is prohibited after an operational status transition.",
         );
       }
+    }
+
+    // State-Transition Legality Check: this endpoint may only be used to
+    // cancel a request. Approving/rejecting must go through LeaveApprovals.
+    if ("status" in req.data && req.data.status !== currentRecord.status) {
+      if (!isDirectTransitionAllowed(currentRecord.status, req.data.status)) {
+        return req.error(
+          400,
+          `Direct transition from '${currentRecord.status}' to '${req.data.status}' is not permitted here. ` +
+            `Approval/rejection must be recorded via the LeaveApprovals workflow.`,
+        );
+      }
+    }
+
+    // --------------------------------------------------------
+    // Cancellation Branch: release/reverse the balance that was
+    // reserved (pendingDays) or consumed (usedDays) by this request.
+    // --------------------------------------------------------
+    if (
+      req.data.status === "Cancelled" &&
+      currentRecord.status !== "Cancelled"
+    ) {
+      const leaveYear = new Date(currentRecord.fromDate).getFullYear();
+
+      const balance = await tx.run(
+        SELECT.one.from("ewms.db.leave.LeaveBalance").where({
+          employee_ID: currentRecord.employee_ID,
+          leaveType_ID: currentRecord.leaveType_ID,
+          year: leaveYear,
+        }),
+      );
+
+      if (!balance) {
+        return req.error(
+          404,
+          "No leave balance record found to reverse for this employee/leave type/year.",
+        );
+      }
+
+      const totalDays = currentRecord.totalDays || 0;
+
+      if (
+        currentRecord.status === "Draft" ||
+        currentRecord.status === "Pending"
+      ) {
+        // Request was still awaiting approval - release the reservation.
+        await tx.run(
+          UPDATE("ewms.db.leave.LeaveBalance")
+            .set({ pendingDays: Math.max(0, balance.pendingDays - totalDays) })
+            .where({ ID: balance.ID }),
+        );
+      } else if (currentRecord.status === "Approved") {
+        // Request was already finalized - give the consumed days back.
+        await tx.run(
+          UPDATE("ewms.db.leave.LeaveBalance")
+            .set({ usedDays: Math.max(0, balance.usedDays - totalDays) })
+            .where({ ID: balance.ID }),
+        );
+      }
+
+      // Audit trail for the cancellation.
+      const { ApprovalHistories } = srv.entities;
+      await tx.run(
+        INSERT.into(
+          ApprovalHistories || "ewms.db.leave.ApprovalHistory",
+        ).entries({
+          ID: cds.utils.uuid(),
+          leaveRequest_ID: currentRecord.ID,
+          action: `Cancelled (was ${currentRecord.status})`,
+          performedBy_ID:
+            req.user?.attr?.employeeId || currentRecord.employee_ID,
+          performedOn: new Date().toISOString(),
+          remarks: req.data.remarks || "Cancelled by request owner.",
+        }),
+      );
     }
   });
 
