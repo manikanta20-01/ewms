@@ -10,14 +10,30 @@ const {
   rejectPayroll,
 } = require("./handlers/payroll-process-actions");
 const { publishPayslip } = require("./handlers/payslip-actions");
+const { registerAuditHooks } = require("../common/utils/audit");
 
 /**
  * EWMS Payroll Service Class Implementation
  */
 module.exports = cds.service.impl(async function () {
-  const { PayrollPeriods, PayrollProcesses } = this.entities;
+  const { PayrollPeriods, PayrollProcesses, Payslips } = this.entities;
 
-  this.on('ProcessPayroll', PayrollPeriods, async (req) => {
+  // Attach the Enterprise Audit Framework
+  registerAuditHooks(this, {
+    include: [
+      "PayrollPeriods",
+      "PayrollProcesses",
+      "EmployeeSalaries",
+      "PayrollHistories",
+      "SalaryComponents",
+      "SalaryStructures",
+      "SalaryStructureItems",
+      "PayrollDetails",
+      "Payslips",
+    ],
+  });
+
+  this.on("ProcessPayroll", PayrollPeriods, async (req) => {
     return await processPayroll(req);
   });
 

@@ -18,3 +18,11 @@ using from './leave/leave-security';
 
 using from './payroll/payroll-service';
 using from './payroll/payroll-security';
+
+// Temporary exposure for testing the AuditLog table in local SQLite
+using { ewms.db.common as common } from '../db/common/audit-log';
+
+extend service EmployeeService {
+  @requires: 'SystemAdmin'
+  entity AuditLogs as projection on common.AuditLog;
+}

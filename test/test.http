@@ -560,3 +560,92 @@ GET http://localhost:4004/odata/v4/leave/LeaveRequests
 
 ### 40. Anonymous Attendance API (401)
 GET http://localhost:4004/odata/v4/attendance/Attendances
+
+
+
+# ====================================SP TEST=================
+
+### Attempt Payroll Process as regular Employee (Should return 403 Forbidden)
+POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(ID=10000000-0000-0000-0000-000000000001)/ProcessPayroll
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{}
+
+### Execute Payroll Process as Payroll Executive (Should succeed)
+POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(ID=10000000-0000-0000-0000-000000000001)/ProcessPayroll
+Authorization: Basic payexec:
+Content-Type: application/json
+
+{}
+
+### Get All Payroll Periods
+GET http://localhost:4004/odata/v4/payroll/PayrollPeriods
+Authorization: Basic payexec:
+
+### Execute Payroll Process as Payroll Executive
+POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(ID=8e000000-0000-0000-0000-000000000002)/ProcessPayroll
+Authorization: Basic payexec:
+Content-Type: application/json
+
+{}
+
+### Verify Audit Log Entry as System Admin
+GET http://localhost:4004/odata/v4/employee/AuditLog
+Authorization: Basic sysadmin:
+
+
+### Read Audit Logs as System Admin
+GET http://localhost:4004/odata/v4/employee/AuditLogs
+Authorization: Basic sysadmin:
+
+
+### 1. Update Employee Bank Details (Triggering an Audit Event)
+PATCH http://localhost:4004/odata/v4/employee/Banks(ID=30000000-0000-0000-0000-000000000001)
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{
+  "accountNumber": "987654321012",
+  "ifsc": "SBIN0001234"
+}
+
+### Update Employee Bank Details as Finance Manager
+PATCH http://localhost:4004/odata/v4/employee/Banks(ID=b0000000-0000-0000-0000-000000000001)
+Authorization: Basic finmgr:
+Content-Type: application/json
+
+{
+  "accountNumber": "987654321012",
+  "ifscCode": "SBIN0001234"
+}
+
+### Execute Payroll Process as Payroll Executive
+POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(ID=8e000000-0000-0000-0000-000000000002)/ProcessPayroll
+Authorization: Basic payexec:
+Content-Type: application/json
+
+{}
+
+### Verify Audit Log Entry as System Admin
+GET http://localhost:4004/odata/v4/employee/AuditLogs
+Authorization: Basic sysadmin:
+
+
+###
+POST http://localhost:4004/odata/v4/payroll/PayrollPeriods(ID=8e000000-0000-0000-0000-000000000002)/ProcessPayroll
+Authorization: Basic payexec:
+Content-Type: application/json
+
+{}
+
+###
+PATCH http://localhost:4004/odata/v4/employee/Banks(ID=b0000000-0000-0000-0000-000000000001)
+Authorization: Basic finmgr:
+Content-Type: application/json
+
+{
+  "accountNumber": "987654321012",
+  "ifscCode": "SBIN0001234"
+}
+

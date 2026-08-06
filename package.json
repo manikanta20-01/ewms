@@ -48,6 +48,7 @@
           },
           "hrperson": {
             "roles": [
+              "HRExecutive",
               "HRAdmin"
             ],
             "attr": {
@@ -61,6 +62,35 @@
             ],
             "attr": {
               "employeeId": "10000000-0000-0000-0000-000000000006",
+              "departmentId": "11111111-dddd-1111-dddd-111111111111"
+            }
+          },
+          "finmgr": {
+            "roles": [
+              "FinanceManager"
+            ],
+            "attr": {
+              "employeeId": "10000000-0000-0000-0000-000000000005",
+              "departmentId": "11111111-dddd-1111-dddd-111111111111"
+            }
+          },
+          "mgrproj": {
+            "roles": [
+              "ProjectManager"
+            ],
+            "attr": {
+              "employeeId": "10000000-0000-0000-0000-000000000003",
+              "departmentId": "11111111-dddd-1111-dddd-111111111111"
+            }
+          },
+          "sysadmin": {
+            "roles": [
+              "SystemAdmin",
+              "HRAdmin",
+              "FinanceManager"
+            ],
+            "attr": {
+              "employeeId": "10000000-0000-0000-0000-000000000000",
               "departmentId": "11111111-dddd-1111-dddd-111111111111"
             }
           }

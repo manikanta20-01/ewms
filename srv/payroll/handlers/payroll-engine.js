@@ -1,5 +1,6 @@
 const cds = require("@sap/cds");
 const { SELECT, INSERT, UPDATE, DELETE } = cds.ql;
+const { persistAudit } = require("../../common/utils/audit");
 
 /**
  * Enterprise Payroll Engine Implementation
@@ -192,10 +193,33 @@ async function processPayroll(req) {
   }
 
   // Update Period Timestamp
+  const processedOn = new Date().toISOString();
   await tx.run(
     UPDATE("ewms.db.payroll.PayrollPeriod")
-      .set({ processedOn: new Date().toISOString() })
+      .set({ processedOn })
       .where({ ID: periodId }),
+  );
+
+  // ==========================
+  // Audit Trail
+  // ==========================
+  // processPayroll writes directly to db-layer entities (bypassing the
+  // service dispatch), so the generic audit hooks registered on the
+  // service in payroll-service.js never fire for this action. Log it
+  // explicitly here instead.
+  await persistAudit(
+    req,
+    "UPDATE",
+    "PayrollPeriods",
+    { ID: periodId, isLocked: period.isLocked, processedOn: period.processedOn ?? null },
+    { ID: periodId, isLocked: period.isLocked, processedOn },
+  );
+  await persistAudit(
+    req,
+    "CREATE",
+    "PayrollProcesses",
+    null,
+    { payrollPeriod_ID: periodId, processed: successCount, failed: failedCount },
   );
 
   return `Payroll Execution Summary for Period '${period.payrollCode}': Processed: ${successCount}, Exceptions/Failed: ${failedCount}.`;
