@@ -2,14 +2,21 @@ const cds = require("@sap/cds");
 const { SELECT } = cds.ql;
 
 module.exports = (srv) => {
-  const { Holiday, HolidayCalendar } = srv.entities;
+  // Bind to the SERVED entity names "Holidays"/"HolidayCalendars" (see
+  // handlers/attendance.js for the reasoning). Registering with the db
+  // entity names silently disabled the holiday validations at runtime.
+  const { Holidays, HolidayCalendars } = srv.entities;
 
   // ==================
   // CREATE
   // ==================
 
-  srv.before("CREATE", "Holiday", async (srv) => {
-    const tx = cds.transaction(srv);
+  // NOTE: the previous code named the request object 'srv' and then
+  // read 'req.data.*' from it - although the misnamed variable still
+  // pointed at the request object, this hid the intent of the code.
+  // The parameter is now correctly named 'req'.
+  srv.before("CREATE", Holidays, async (req) => {
+    const tx = cds.transaction(req);
 
     if (!req.data.holidayCalendar_ID)
       return req.error(400, "Holiday Calendar is required");
@@ -21,7 +28,7 @@ module.exports = (srv) => {
 
     const calendar = await tx.run(
       SELECT.one
-        .from(HolidayCalendar)
+        .from(HolidayCalendars)
         .where({ ID: req.data.holidayCalendar_ID }),
     );
 
@@ -39,7 +46,7 @@ module.exports = (srv) => {
     }
 
     const exisitingHoliday = await tx.run(
-      SELECT.one.from(Holiday).where({
+      SELECT.one.from(Holidays).where({
         holidayCalendar_ID: req.data.holidayCalendar_ID,
         holidayDate: req.data.holidayDate,
       }),
@@ -54,11 +61,21 @@ module.exports = (srv) => {
   // UPDATE
   // ==================
 
-  srv.before("UPDATE", "Holiday", async (srv) => {
-    const tx = cds.transaction(srv);
+  srv.before("UPDATE", Holidays, async (req) => {
+    const tx = cds.transaction(req);
+
+    // Key extraction must not rely on req.data.ID - PATCH payloads
+    // carry only the changed fields. Read the key from the request
+    // params first, fall back to the payload (previously the handler
+    // compared against the undefined req.ID and reported every
+    // legitimate date edit as a duplicate).
+    const targetId =
+      req.params?.[0]?.ID ||
+      (typeof req.params?.[0] === "string" ? req.params[0] : null) ||
+      req.data.ID;
 
     const currentHoliday = await tx.run(
-      SELECT.one.from(Holiday).where({ ID: req.data.ID }),
+      SELECT.one.from(Holidays).where({ ID: targetId }),
     );
 
     if (!currentHoliday) {
@@ -71,7 +88,7 @@ module.exports = (srv) => {
     const holidayDate = req.data.holidayDate ?? currentHoliday.holidayDate;
 
     const calendar = await tx.run(
-      SELECT.one.from(HolidayCalendar).where({ ID: holidayCalenday_ID }),
+      SELECT.one.from(HolidayCalendars).where({ ID: holidayCalenday_ID }),
     );
 
     if (!calendar) {
@@ -87,10 +104,13 @@ module.exports = (srv) => {
       );
 
     const exisitingHoliday = await tx.run(
-      SELECT.one.from(Holiday).where({ holidayCalenday_ID, holidayDate }),
+      SELECT.one.from(Holidays).where({
+        holidayCalendar_ID: holidayCalenday_ID,
+        holidayDate,
+      }),
     );
 
-    if (exisitingHoliday && exisitingHoliday.ID !== req.ID) {
+    if (exisitingHoliday && exisitingHoliday.ID !== targetId) {
       return req.error(400, "A Holiday already exists for this date.");
     }
   });
@@ -99,7 +119,7 @@ module.exports = (srv) => {
   // DELETE
   // ==================
 
-  srv.before("DELETE", "Holiday", async (srv) => {
+  srv.before("DELETE", Holidays, async (req) => {
     // Attendance
     // Leave
     // Payroll

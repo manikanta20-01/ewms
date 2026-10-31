@@ -45,7 +45,25 @@ annotate EmployeeService.StatutoryDetails with @restrict: [
 
 annotate EmployeeService.Documents with @restrict: [
   { grant: ['READ','CREATE'], to: ['Employee'], where: 'employee_ID = $user.employeeId' },
-  { grant: ['READ','UPDATE','DELETE'], to: ['HRAdmin','SystemAdmin'] }
+  // Sprint 17: employees may correct their own METADATA (issue date,
+  // remarks, numbers) on their own documents. Every sensitive field
+  // (status, verification, storage, content) is refused by the
+  // handler regardless of grants, so this is safe self-service.
+  { grant: ['UPDATE'], to: ['Employee'], where: 'employee_ID = $user.employeeId' },
+  // READ, CREATE, UPDATE, DELETE for HRAdmin/SystemAdmin. CREATE is
+  // required: HR registers statutory documents (contract, PAN scan,
+  // ...) on behalf of employees. The create handler's self-write
+  // guard lets the HR group bypass the employee_ID ownership check,
+  // so this grant cannot be misused by a plain employee.
+  { grant: ['CREATE','READ','UPDATE','DELETE'], to: ['HRAdmin','SystemAdmin'] },
+
+  // Sprint 17 - verification / lifecycle / file access. Deliberately
+  // HRAdmin + SystemAdmin ONLY (matches the existing READ policy,
+  // which has never included HRExecutive for documents). The owner
+  // may download their own document's bytes via the where clause.
+  { grant: ['Verify','Reject','Archive'], to: ['HRAdmin','SystemAdmin'] },
+  { grant: ['Download'], to: ['HRAdmin','SystemAdmin'] },
+  { grant: ['Download'], to: ['Employee'], where: 'employee_ID = $user.employeeId' },
 ];
 
 annotate EmployeeService.Educations with @restrict: [

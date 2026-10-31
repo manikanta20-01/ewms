@@ -1,0 +1,95 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:l="sap.ui.layout"
+          xmlns:f="sap.f"
+          controllerName="ewms.EWMS.controller.AttendanceDetail">
+  <!-- Sprint 28 - Attendance detail (end column). Shows the real
+       record (shift expanded same-service) and the location evidence
+       rows the backend validator wrote for this day. -->
+  <f:DynamicPage id="attDetailPage" headerExpanded="true">
+    <f:title>
+      <DynamicPageTitle>
+        <heading>
+          <Title text="Attendance {attD>/attendanceDate}"/>
+        </heading>
+      </DynamicPageTitle>
+    </f:title>
+    <f:header>
+      <DynamicPageHeader>
+        <Toolbar>
+          <Button text="Back to list" icon="sap-icon://nav-back" press=".onNavBack"/>
+          <ToolbarSpacer/>
+          <Button text="Check out (record time)" icon="sap-icon://clock-out"
+                  press=".onCheckOut" busy="{attD>/checkoutBusy}"/>
+          <Button text="Correct times" icon="sap-icon://edit"
+                  press=".onOpenCorrection"/>
+        </Toolbar>
+      </DynamicPageHeader>
+    </f:header>
+    <f:content>
+      <VBox class="sapUiSmallMargin">
+        <MessageStrip visible="{attD>/error}" type="Error" showIcon="true"
+                      text="{attD>/errorText}"/>
+        <BusyIndicator visible="{attD>/busy}"/>
+        <Panel headerText="Record" visible="{= !${attD>/busy}}">
+          <l:Grid defaultSpan="XL4 L6 M6 S12">
+            <VBox><Label text="Date"/><Text text="{attD>/attendanceDate}"/></VBox>
+            <VBox><Label text="Attendance status"/><Text text="{attD>/statusText}"/></VBox>
+            <VBox><Label text="Work location"/><Text text="{attD>/workLocationText}"/></VBox>
+            <VBox><Label text="Shift"/><Text text="{attD>/shiftText}"/></VBox>
+            <VBox><Label text="Check-in"/><Text text="{attD>/checkInText}"/></VBox>
+            <VBox><Label text="Check-out"/><Text text="{attD>/checkOutText}"/></VBox>
+            <VBox><Label text="Worked hours"/><Text text="{attD>/workedHoursText}"/></VBox>
+            <VBox><Label text="Late minutes"/><Text text="{attD>/lateText}"/></VBox>
+            <VBox><Label text="Early leaving minutes"/><Text text="{attD>/earlyText}"/></VBox>
+            <VBox><Label text="Remarks"/><Text text="{attD>/remarksText}"/></VBox>
+          </l:Grid>
+        </Panel>
+        <Panel headerText="Geofence evaluation (server-written evidence)">
+          <Table items="{attD>/geoEvents}"
+                 noDataText="No location evidence recorded for this attendance">
+            <columns>
+              <Column width="9rem"><Text text="Operation"/></Column>
+              <Column width="10rem"><Text text="Result"/></Column>
+              <Column width="12rem"><Text text="Distance"/></Column>
+              <Column><Text text="Reason"/></Column>
+            </columns>
+            <items>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{attD>eventTypeText}"/>
+                  <Text text="{attD>resultText}"/>
+                  <Text text="{attD>distanceText}"/>
+                  <Text text="{attD>reason}" wrapping="true"/>
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </Panel>
+      </VBox>
+    </f:content>
+  </f:DynamicPage>
+
+  <!-- Correction dialog: PATCHes only whitelisted fields; the backend
+       still validates role + row-level rules on every field. -->
+  <Dialog id="attCorrDialog" title="Correct times">
+    <content>
+      <VBox class="sapUiSmallMargin">
+        <Label text="Check-in time" wrapping="true" width="100%"/>
+        <TimePicker id="corrIn" width="100%" valueFormat="HH:mm"
+                    displayFormat="HH:mm" value="{attD>/corrForm/checkIn}"/>
+        <Label text="Check-out time" wrapping="true" width="100%" class="sapUiTinyMarginTop"/>
+        <TimePicker id="corrOut" width="100%" valueFormat="HH:mm"
+                    displayFormat="HH:mm" value="{attD>/corrForm/checkOut}"/>
+        <Label text="Remarks" wrapping="true" width="100%" class="sapUiTinyMarginTop"/>
+        <TextArea id="corrRemarks" width="100%" rows="3"
+                  value="{attD>/corrForm/remarks}"/>
+        <MessageStrip visible="{attD>/corrError}" type="Error" showIcon="true"
+                      text="{attD>/corrError}" class="sapUiSmallMarginTop"/>
+      </VBox>
+    </content>
+    <buttons>
+      <Button text="Save correction" type="Emphasized" press=".onConfirmCorrection"
+              busy="{attD>/corrBusy}"/>
+      <Button text="Cancel" press=".onCloseCorrection"/>
+    </buttons>
+  </Dialog>
+</mvc:View>

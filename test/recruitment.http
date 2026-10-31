@@ -1,0 +1,280 @@
+# ============================================================
+# EWMS - SPRINT 12: OFFER LETTER + ONBOARDING (manual API tests)
+# ------------------------------------------------------------
+# Companion to the automated test suite (test/recruitment.test.js).
+# Use these requests from VS Code with the "REST Client" extension
+# (or any HTTP client) while the development server is running:
+#
+#     npm run watch
+#
+# The development server listens on http://localhost:4004.
+# Authentication uses the MOCKED users defined in package.json
+# (cds.requires.auth.users). Password is empty; only the username
+# matters, e.g.  Authorization: Basic sysadmin:
+#
+# MOCK USERS USED BELOW
+#   sysadmin  - SystemAdmin + HRAdmin + FinanceManager (sees CTC)
+#   hrperson  - HRExecutive + HRAdmin (HR day-to-day work)
+#   finmgr    - FinanceManager; its employeeId (...005) is the
+#               seeded LevelHR approver, so it approves offer tasks
+#   empjohn   - plain Employee (must get 403 on recruitment data)
+# ============================================================
+
+@host = http://localhost:4004
+@recruitment = {{host}}/odata/v4/recruitment
+@workflow = {{host}}/odata/v4/workflow
+@employee = {{host}}/odata/v4/employee
+
+### ==========================================================
+# 0. HEALTH: list existing offers (as sysadmin)
+# ==========================================================
+GET {{recruitment}}/Offers?$top=5
+Authorization: Basic sysadmin:
+
+### ==========================================================
+# 1. CREATE CANDIDATE (sysadmin; auto code CAND..., status New)
+# ==========================================================
+# @name createCandidate
+POST {{recruitment}}/Candidates
+Authorization: Basic sysadmin:
+Content-Type: application/json
+
+{
+  "firstName": "Ravi",
+  "lastName": "Kumar",
+  "email": "ravi.kumar@example.com",
+  "mobile": "+91-90000-00001",
+  "experienceYears": 4
+}
+
+### Copy the ID of the created candidate into this variable.
+@candidateId = {{createCandidate.response.body.ID}}
+
+### ==========================================================
+# 2. CREATE DRAFT OFFER (sysadmin; auto number OFF..., status Draft)
+#    Department/designation/manager IDs are seeded reference rows.
+# ==========================================================
+# @name createOffer
+POST {{recruitment}}/Offers
+Authorization: Basic sysadmin:
+Content-Type: application/json
+
+{
+  "candidate_ID": "{{candidateId}}",
+  "department_ID": "44444444-dddd-4444-dddd-444444444444",
+  "designation_ID": "11111111-1111-1111-1111-111111111111",
+  "reportingManager_ID": "10000000-0000-0000-0000-000000000004",
+  "employmentType": "Permanent",
+  "offerDate": "2026-10-01",
+  "expiryDate": "2099-11-30",
+  "joiningDate": "2099-12-01",
+  "offeredCTC": 1200000,
+  "workLocation": "Hyderabad"
+}
+
+### Copy the created offer ID.
+@offerId = {{createOffer.response.body.ID}}
+
+### ==========================================================
+# 3. SUBMIT FOR APPROVAL (HR person; Draft -> PendingApproval and
+#    starts workflow definition WF-OFFER-STD)
+# ==========================================================
+POST {{recruitment}}/Offers({{offerId}})/RecruitmentService.SubmitForApproval
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{}
+
+### ==========================================================
+# 4. FIND THE OPEN WORKFLOW TASK FOR THIS OFFER
+#    (filter by the workflow instance created for the offer)
+# ==========================================================
+# @name findInstance
+GET {{workflow}}/WorkflowInstances?$filter=businessObjectId eq {{offerId}}
+Authorization: Basic sysadmin:
+
+@instanceId = {{findInstance.response.body.value[0].ID}}
+
+### ==========================================================
+# 5. APPROVE THROUGH THE WORKFLOW ENGINE (LevelHR approver;
+#    the task callback moves the offer to Approved)
+# ==========================================================
+# @name approveTask
+GET {{workflow}}/WorkflowTasks?$filter=instance_ID eq {{instanceId}} and status eq 'Open'
+Authorization: Basic finmgr:
+
+@taskId = {{approveTask.response.body.value[0].ID}}
+
+###
+POST {{workflow}}/WorkflowTasks({{taskId}})/WorkflowService.Approve
+Authorization: Basic finmgr:
+Content-Type: application/json
+
+{ "comments": "Compensation verified." }
+
+### ==========================================================
+# 6. CHECK THE OFFER IS APPROVED, THEN SEND IT TO THE CANDIDATE
+#    (Approved -> Sent; sentOn timestamp is set)
+# ==========================================================
+GET {{recruitment}}/Offers({{offerId}})
+Authorization: Basic sysadmin:
+
+###
+POST {{recruitment}}/Offers({{offerId}})/RecruitmentService.SendOffer
+Authorization: Basic sysadmin:
+Content-Type: application/json
+
+{}
+
+### ==========================================================
+# 7. CANDIDATE ACCEPTS (HR records the decision; Sent -> Accepted;
+#    an onboarding case is auto-created)
+# ==========================================================
+POST {{recruitment}}/Offers({{offerId}})/RecruitmentService.RecordAcceptance
+Authorization: Basic sysadmin:
+Content-Type: application/json
+
+{}
+
+### ==========================================================
+# 8. FIND THE AUTO-CREATED ONBOARDING CASE
+# ==========================================================
+# @name findCase
+GET {{recruitment}}/OnboardingCases?$filter=offer_ID eq {{offerId}}
+Authorization: Basic sysadmin:
+
+@caseId = {{findCase.response.body.value[0].ID}}
+
+### ==========================================================
+# 9. START ONBOARDING (NotStarted -> InProgress; seeds tasks from
+#    the onboarding checklist templates)
+# ==========================================================
+POST {{recruitment}}/OnboardingCases({{caseId}})/RecruitmentService.StartOnboarding
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{}
+
+### ==========================================================
+# 10. LIST ONBOARDING TASKS AND COMPLETE THEM
+# ==========================================================
+GET {{recruitment}}/OnboardingTasks?$filter=onboardingCase_ID eq {{caseId}}
+Authorization: Basic hrperson:
+
+### Repeat StartTask + CompleteTask for every task (assignees can
+### also work their OWN tasks; see the security annotations).
+POST {{recruitment}}/OnboardingTasks(<taskId>)/RecruitmentService.StartTask
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{}
+
+###
+POST {{recruitment}}/OnboardingTasks(<taskId>)/RecruitmentService.CompleteTask
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{ "comments": "done" }
+
+### ==========================================================
+# 11. REQUIRED DOCUMENTS: submit and verify each requirement
+# ==========================================================
+GET {{recruitment}}/OnboardingDocumentRequirements?$filter=onboardingCase_ID eq {{caseId}}
+Authorization: Basic hrperson:
+
+### For every requirement row:
+POST {{recruitment}}/OnboardingDocumentRequirements(<docId>)/RecruitmentService.SubmitDocument
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{ "comments": "PAN card received" }
+
+###
+POST {{recruitment}}/OnboardingDocumentRequirements(<docId>)/RecruitmentService.VerifyDocument
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{ "comments": "verified" }
+
+### ==========================================================
+# 12. COMPLETE ONBOARDING (blocked while mandatory tasks/docs are
+#     open; succeeds when everything mandatory is done)
+# ==========================================================
+POST {{recruitment}}/OnboardingCases({{caseId}})/RecruitmentService.CompleteOnboarding
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{}
+
+### ==========================================================
+# 13. EMPLOYEE CONVERSION (HRAdmin/SystemAdmin only - creating
+#     employee master data is a sensitive operation).
+#     Idempotent: the second call links the existing employee and
+#     NEVER creates a duplicate.
+# ==========================================================
+POST {{recruitment}}/OnboardingCases({{caseId}})/RecruitmentService.ConvertToEmployee
+Authorization: Basic sysadmin:
+Content-Type: application/json
+
+{}
+
+### Second call -> no duplicate employee is created.
+POST {{recruitment}}/OnboardingCases({{caseId}})/RecruitmentService.ConvertToEmployee
+Authorization: Basic sysadmin:
+Content-Type: application/json
+
+{}
+
+### Verify the converted employee in the EXISTING Employee Core.
+GET {{employee}}/Employees?$filter=email eq 'ravi.kumar@example.com'
+Authorization: Basic sysadmin:
+
+### ==========================================================
+# 14. AUTHORIZATION NEGATIVE CHECKS
+# ==========================================================
+### Plain Employee must NOT read candidates (403).
+GET {{recruitment}}/Candidates?$top=1
+Authorization: Basic empjohn:
+
+### Plain Employee must NOT convert (403).
+POST {{recruitment}}/OnboardingCases({{caseId}})/RecruitmentService.ConvertToEmployee
+Authorization: Basic empjohn:
+Content-Type: application/json
+
+{}
+
+### The hiring manager sees the offer but NOT the CTC (masked).
+GET {{recruitment}}/Offers({{offerId}})
+Authorization: Basic mgrdept:
+
+### ==========================================================
+# 15. ALTERNATIVE PATHS
+# ==========================================================
+### Reject a workflow task (comments mandatory) -> offer stays in
+### PendingApproval; HR can then reject it directly.
+POST {{workflow}}/WorkflowTasks({{taskId}})/WorkflowService.Reject
+Authorization: Basic finmgr:
+Content-Type: application/json
+
+{ "comments": "Compensation out of band." }
+
+### Candidate declines a sent offer (Sent -> Rejected).
+POST {{recruitment}}/Offers({{offerId}})/RecruitmentService.RecordRejection
+Authorization: Basic sysadmin:
+Content-Type: application/json
+
+{ "comments": "Candidate declined." }
+
+### HR withdraws a draft offer (Draft -> Withdrawn).
+POST {{recruitment}}/Offers({{offerId}})/RecruitmentService.WithdrawOffer
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{}
+
+### Expire an offer that was never answered (any active -> Expired).
+POST {{recruitment}}/Offers({{offerId}})/RecruitmentService.ExpireOffer
+Authorization: Basic hrperson:
+Content-Type: application/json
+
+{}

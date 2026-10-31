@@ -1,0 +1,2 @@
+ID,name,description,isActive
+g1000000-0000-0000-0000-000000000001,Standard Exit Clearance,Default clearance checklist seeded into every exit case (all mandatory items must be completed before Ready for Separation),true

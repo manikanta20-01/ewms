@@ -9,20 +9,20 @@
   },
   "devDependencies": {
     "@cap-js/sqlite": "^1",
-    "@sap/cds-dk": "^9.9.4"
+    "@sap/cds-dk": "^9.9.4",
+    "axios": "^1.20.0"
   },
   "scripts": {
     "start": "cds-serve",
-    "watch": "cds watch"
+    "watch": "cds watch",
+    "test": "CDS_ENV=test node --test 'test/**/*.test.js'",
+    "test:smoke": "CDS_ENV=test node --test test/setup.js"
   },
   "cds": {
     "requires": {
       "outbox": false,
       "db": {
-        "kind": "sqlite",
-        "credentials": {
-          "url": "db.sqlite"
-        }
+        "kind": "sqlite"
       },
       "auth": {
         "kind": "mocked",
@@ -97,6 +97,16 @@
         }
       }
     },
+    "[test]": {
+      "requires": {
+        "db": {
+          "kind": "sqlite",
+          "credentials": {
+            "url": ":memory:"
+          }
+        }
+      }
+    },
     "[production]": {
       "requires": {
         "db": {
@@ -107,5 +117,8 @@
         }
       }
     }
+  },
+  "allowScripts": {
+    "better-sqlite3": true
   }
 }

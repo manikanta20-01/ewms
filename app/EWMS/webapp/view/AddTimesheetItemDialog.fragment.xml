@@ -1,0 +1,27 @@
+<core:FragmentDefinition xmlns:core="sap.ui.core" xmlns="sap.m" xmlns:l="sap.ui.layout">
+  <!-- Sprint 28 - add a work entry to a Draft timesheet. Hours are
+       computed by the backend from start/end times; the entry is
+       validated against the period, the assignment and attendance. -->
+  <Dialog id="tsItemDlg" title="Add work entry" contentWidth="26rem">
+    <content>
+      <l:VerticalLayout class="sapUiSmallMargin" width="100%">
+        <MessageStrip visible="{= ${tsd>/itemError} ? true : false }"
+                     type="Error" showIcon="true" text="{tsd>/itemError}"/>
+        <Label text="Work date (must be inside the reporting period, not in the future)"/>
+        <DatePicker value="{tsd>/itemDraft/workDate}" width="100%"/>
+        <Label text="Start time"/>
+        <TimePicker value="{tsd>/itemDraft/startTime}" width="100%"/>
+        <Label text="End time"/>
+        <TimePicker value="{tsd>/itemDraft/endTime}" width="100%"/>
+        <Label text="Break hours"/>
+        <Input value="{tsd>/itemDraft/breakHours}" type="Number"/>
+        <Label text="Notes"/>
+        <TextArea value="{tsd>/itemDraft/notes}" rows="3" width="100%"/>
+      </l:VerticalLayout>
+    </content>
+    <buttons>
+      <Button text="Cancel" press=".onItemCancel"/>
+      <Button text="Save" type="Emphasized" press=".onItemSave" enabled="{=!${tsd>/busy}}"/>
+    </buttons>
+  </Dialog>
+</core:FragmentDefinition>

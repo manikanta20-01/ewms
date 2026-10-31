@@ -1,0 +1,63 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:core="sap.ui.core"
+          controllerName="ewms.EWMS.controller.TimesheetDetail">
+  <!-- Sprint 28 - Timesheet detail. Real backend row + real bound
+       lifecycle actions; Reject requires a reason (backend rule). -->
+  <Page id="tsDetailPage" title="Timesheet" showNavButton="true" navButtonPress=".onNavBack">
+    <headerContent>
+      <Toolbar>
+        <Button text="Submit" press=".onSubmit" visible="{tsd>/canSubmit}" enabled="{=!${tsd>/busy}}"/>
+        <Button text="Start review" press=".onStartReview" visible="{tsd>/canStartReview}" enabled="{=!${tsd>/busy}}"/>
+        <Button text="Withdraw" press=".onWithdraw" visible="{tsd>/canWithdraw}" enabled="{=!${tsd>/busy}}"/>
+        <Button icon="sap-icon://refresh" press=".onReload" tooltip="Reload"/>
+      </Toolbar>
+    </headerContent>
+    <content>
+      <VBox class="sapUiSmallMargin" busyIndicatorDelay="0" busy="{tsd>/busy}">
+        <MessageStrip visible="{tsd>/error}" type="Error" showIcon="true" text="{tsd>/errorText}"/>
+        <core:Fragment fragmentName="ewms.EWMS.view.TimesheetHeader" type="XML"/>
+        <Table id="tsItems" headerText="Work entries"
+               noDataText="No work entries yet (Submit needs at least one)"
+               items="{tsd>/items}">
+          <columns>
+            <Column width="9rem"><Text text="Date"/></Column>
+            <Column width="10rem"><Text text="Start – End"/></Column>
+            <Column width="6rem"><Text text="Break (h)"/></Column>
+            <Column width="6rem"><Text text="Regular (h)"/></Column>
+            <Column width="6rem"><Text text="OT (h)"/></Column>
+            <Column width="16rem"><Text text="Notes"/></Column>
+          </columns>
+          <ColumnListItem>
+            <cells>
+              <Text text="{tsd>workDate}"/>
+              <Text text="{tsd>timeText}"/>
+              <Text text="{tsd>breakHours}"/>
+              <Text text="{tsd>regularHours}"/>
+              <Text text="{tsd>overtimeHours}"/>
+              <Text text="{tsd>notes}"/>
+            </cells>
+          </ColumnListItem>
+          <headerToolbar>
+            <Toolbar>
+              <Button text="Add work entry" press=".onAddItem"
+                      visible="{tsd>/canAddItem}" enabled="{=!${tsd>/busy}}"/>
+            </Toolbar>
+          </headerToolbar>
+        </Table>
+      </VBox>
+    </content>
+    <footer>
+      <Toolbar>
+        <Button text="Approve" type="Accept" press=".onApprove"
+                visible="{tsd>/canApprove}" enabled="{=!${tsd>/busy}}"/>
+        <Button text="Reject" type="Reject" press=".onReject"
+                visible="{tsd>/canReject}" enabled="{=!${tsd>/busy}}"/>
+        <Button text="Reopen (HR)" press=".onReopen"
+                visible="{tsd>/canReopen}" enabled="{=!${tsd>/busy}}"/>
+        <Button text="Cancel" press=".onCancel"
+                visible="{tsd>/canCancel}" enabled="{=!${tsd>/busy}}"/>
+        <ToolbarSpacer/>
+        <Text text="Lifecycle transitions run the backend actions; totals and locks stay server-side."/>
+      </Toolbar>
+    </footer>
+  </Page>
+</mvc:View>

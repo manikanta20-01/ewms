@@ -1,0 +1,9 @@
+ID,checklist_ID,sequence,taskCode,title,description,mandatory,assigneeRole
+b1000000-0000-0000-0000-000000000001,a1000000-0000-0000-0000-000000000001,1,VERIFY_IDENTITY,Verify candidate information,Check identity and contact data of the selected candidate,true,HRExecutive
+b1000000-0000-0000-0000-000000000002,a1000000-0000-0000-0000-000000000001,2,VERIFY_EDUCATION,Verify education documents,Verify submitted education certificates,true,HRExecutive
+b1000000-0000-0000-0000-000000000003,a1000000-0000-0000-0000-000000000001,3,VERIFY_EXPERIENCE,Verify previous employment,Verify previous employment records,true,HRExecutive
+b1000000-0000-0000-0000-000000000004,a1000000-0000-0000-0000-000000000001,4,EMPLOYEE_INFO,Complete employee information,Fill missing employee master data before conversion,true,HRExecutive
+b1000000-0000-0000-0000-000000000005,a1000000-0000-0000-0000-000000000001,5,ASSIGN_ORG,Assign department and position,Confirm department / designation / reporting manager,true,HRExecutive
+b1000000-0000-0000-0000-000000000006,a1000000-0000-0000-0000-000000000001,6,ACCESS_SETUP,Configure system access,Set up system access and user accounts,false,SystemAdmin
+b1000000-0000-0000-0000-000000000007,a1000000-0000-0000-0000-000000000001,7,ORIENTATION,Complete orientation,Schedule and complete orientation,false,HRExecutive
+b1000000-0000-0000-0000-000000000008,a1000000-0000-0000-0000-000000000001,8,JOINING_FORMALITIES,Complete joining formalities,Sign joining documents and formalities,true,HRExecutive

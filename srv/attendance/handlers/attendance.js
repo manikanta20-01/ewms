@@ -1,5 +1,7 @@
 const cds = require("@sap/cds");
-const { SELECT } = cds.ql;
+const { SELECT, UPDATE } = cds.ql;
+const { assertSelfCreate } = require("../../common/utils/self-write-guard");
+const { evaluateAttendanceLocation } = require("../../geo/geofence-validator");
 
 module.exports = (srv) => {
   // IMPORTANT: bind against the actual local entity objects from this
@@ -19,6 +21,12 @@ module.exports = (srv) => {
   srv.before("CREATE", Attendances, async (req) => {
     const tx = cds.transaction(req);
     const { employee_ID, attendanceDate, checkIn } = req.data;
+
+    // Row-level self-service guard: @restrict where-clauses only
+    // filter reads, not CREATE - without this a plain employee
+    // could check in attendance for a colleague. req.reject
+    // throws, so a rejected request never reaches the rules below.
+    await assertSelfCreate(req, "employee_ID");
 
     if (!employee_ID) return req.error(400, "Employee is required");
     if (!attendanceDate) return req.error(400, "Attendance date is required");
@@ -100,6 +108,35 @@ module.exports = (srv) => {
     req.data.workLocation = req.data.workLocation || "Office";
     req.data.attendanceStatus =
       req.data.workLocation === "WorkFromHome" ? "WorkFromHome" : "Present";
+
+    // --------------------------------------------------------
+    // SPRINT 16 - optional geofence evaluation on check-in
+    // ------------------------------------------------------------
+    // Runs ONLY when the request carried coordinates. Result lives
+    // on req._geoEval so the after-CREATE hook below can link the
+    // evidence row to the attendance row as soon as its ID exists.
+    // A REJECTED location throws here -> the whole request fails.
+    // ------------------------------------------------------------
+    req._geoEval = await evaluateAttendanceLocation(req, tx, "CheckIn", {
+      employee_ID,
+      eventDate: attendanceDate,
+      workLocation: req.data.workLocation,
+      attendance_ID: null,
+    });
+  });
+
+  // ------------------------------------------------------------
+  // SPRINT 16 - link the location evidence to the attendance row
+  // (runs right after CREATE, still inside the same transaction:
+  // the FK-safe moment where the attendance ID finally exists).
+  // ------------------------------------------------------------
+  srv.after("CREATE", Attendances, async (data, req) => {
+    if (!req._geoEval) return;
+    await cds.transaction(req).run(
+      UPDATE("ewms.db.geo.AttendanceLocationEvent")
+        .set({ attendance_ID: data.ID })
+        .where({ ID: req._geoEval.eventId }),
+    );
   });
 
   // ============================================================
@@ -141,6 +178,22 @@ module.exports = (srv) => {
       return req.error(400, "Employee has already checked out.");
     if (!attendance.checkIn)
       return req.error(400, "Employee has not checked in.");
+
+    // --------------------------------------------------------
+    // SPRINT 16 - optional geofence evaluation on check-out
+    // (placed AFTER the duplicate-checkout guards: a retried
+    // check-out is refused by the guards above and can never
+    // produce a second evidence row. The attendance row exists,
+    // so the evidence can reference it immediately.)
+    // --------------------------------------------------------
+    if (req.data.latitude != null || req.data.longitude != null) {
+      await evaluateAttendanceLocation(req, tx, "CheckOut", {
+        employee_ID: attendance.employee_ID,
+        eventDate: attendance.attendanceDate,
+        workLocation: attendance.workLocation,
+        attendance_ID: attendance.ID,
+      });
+    }
 
     const checkInMinutes = timeToMinutes(attendance.checkIn);
     const checkOutMinutes = timeToMinutes(req.data.checkOut);

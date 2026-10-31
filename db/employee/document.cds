@@ -1,4 +1,5 @@
 namespace ewms.db.employee;
+
 using { managed } from '@sap/cds/common';
 
 using ewms.db.common as type from '../common/types';
@@ -20,6 +21,31 @@ entity Document : managed {
     verifiedBy : String(100);
     verifiedOn : Timestamp;
     remarks : String(500);
-    status : enums.Status default 'Active';
-}
 
+    // ========================================================
+    // SPRINT 17 - Documents & Compliance (in-place extension)
+    // --------------------------------------------------------
+    // The verification workflow (Pending -> Verified/Rejected)
+    // and the document row lifecycle (Active/Archived/Replaced)
+    // are enforced in srv/employee/handlers/document.js and under
+    // srv/compliance/. Beginner summary:
+    //
+    //   * content      upload-only field (@cds.persistence.skip =
+    //                  NOT a database column). The handler validates
+    //                  the bytes (magic signature, size, filename)
+    //                  and writes them into the private document
+    //                  store; only `filePath` (a storage key) and
+    //                  the real detected mimeType are kept.
+    //   * sha256       integrity fingerprint of the stored bytes.
+    //   * issueDate    when the authority issued the document.
+    //   * verificationStatus  Pending/Verified/Rejected (HR work).
+    //   * verificationNotes   HR comments on verify/reject.
+    // ========================================================
+    content : LargeBinary @cds.persistence.skip;
+    sha256 : String(64);
+    issueDate : Date;
+
+    verificationStatus : enums.DocumentVerificationStatus default 'Pending';
+    verificationNotes : String(500);
+    status : enums.DocumentStatus default 'Active';
+}

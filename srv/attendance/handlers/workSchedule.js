@@ -2,11 +2,17 @@ const cds = require("@sap/cds");
 const { SELECT } = cds.ql;
 
 module.exports = (srv) => {
-  const { WorkSchedule, Employee, Shift } = srv.entities;
+  // Bind to the SERVED entity name "WorkSchedules" (the projection in
+  // attendance-service.cds). The db entity name never matched a dispatched
+  // OData request, silently disabling every validation below. Employee
+  // master data lives in another module and is addressed through its
+  // fully qualified db entity name.
+  const { WorkSchedules, Shifts } = srv.entities;
+  const Employee = "ewms.db.employee.Employee";
   // =============
   // CREATE
   // =============
-  srv.before("CREATE", "WorkSchedule", async (req) => {
+  srv.before("CREATE", WorkSchedules, async (req) => {
     const tx = cds.transaction(req);
 
     if (!req.data.employee_ID) return req.error(400, "Employee is required");
@@ -34,13 +40,13 @@ module.exports = (srv) => {
 
     // check duplicate schedule
     const duplicate = await tx.run(
-      SELECT.one.from(WorkSchedule).where({
+      SELECT.one.from(WorkSchedules).where({
         employee_ID: req.data.employee_ID,
         scheduleDate: req.data.scheduleDate,
       }),
     );
     if (duplicate) {
-      return req.error(400, "EMployee Work schedule already exists");
+      return req.error(400, "Employee Work schedule already exists");
     }
 
     // Reject past dates
@@ -54,11 +60,19 @@ module.exports = (srv) => {
   // UPDATE
   // ==================
 
-  srv.before("UPDATE", "WorkSchedule", async (req) => {
+  srv.before("UPDATE", WorkSchedules, async (req) => {
     const tx = cds.transaction(req);
 
+    // Key extraction must not rely on req.data.ID - PATCH payloads
+    // carry only the changed fields. Read the key from the request
+    // params first (bound requests), fall back to the payload.
+    const targetId =
+      req.params?.[0]?.ID ||
+      (typeof req.params?.[0] === "string" ? req.params[0] : null) ||
+      req.data.ID;
+
     const current = await tx.run(
-      SELECT.one.from(WorkSchedule).where({ ID: req.data.ID }),
+      SELECT.one.from(WorkSchedules).where({ ID: targetId }),
     );
 
     if (!current) return req.error(404, "Work Schedule not found.");
@@ -72,7 +86,7 @@ module.exports = (srv) => {
     // Employee validation
 
     const employee = await tx.run(
-      SELECT.one.from("ewms.db.employee.Employee").where({ ID: employee_ID }),
+      SELECT.one.from(Employee).where({ ID: employee_ID }),
     );
 
     if (!employee) return req.error(400, "Employee not found.");
@@ -80,7 +94,7 @@ module.exports = (srv) => {
     // Shift validation
 
     const shift = await tx.run(
-      SELECT.one.from("ewms.db.attendance.Shift").where({ ID: shift_ID }),
+      SELECT.one.from(Shifts).where({ ID: shift_ID }),
     );
 
     if (!shift) return req.error(400, "Shift not found.");
@@ -88,7 +102,7 @@ module.exports = (srv) => {
     // Duplicate Work Schedule
 
     const duplicate = await tx.run(
-      SELECT.one.from(WorkSchedule).where({
+      SELECT.one.from(WorkSchedules).where({
         employee_ID,
         scheduleDate,
       }),
@@ -103,13 +117,18 @@ module.exports = (srv) => {
   // DELETE
   // ==================
 
-  srv.before("DELETE", "WorkSchedule", async (req) => {
+  srv.before("DELETE", WorkSchedules, async (req) => {
     const tx = cds.transaction(req);
 
-    // Get current Work Schedule
+    // Get current Work Schedule (key from params - DELETE requests
+    // carry no payload at all, so req.data.ID alone can be undefined)
+    const targetId =
+      req.params?.[0]?.ID ||
+      (typeof req.params?.[0] === "string" ? req.params[0] : null) ||
+      req.data.ID;
 
     const workSchedule = await tx.run(
-      SELECT.one.from(WorkSchedule).where({ ID: req.data.ID }),
+      SELECT.one.from(WorkSchedules).where({ ID: targetId }),
     );
 
     if (!workSchedule) return req.error(404, "Work Schedule not found.");

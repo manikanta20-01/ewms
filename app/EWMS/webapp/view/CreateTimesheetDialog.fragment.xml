@@ -1,0 +1,29 @@
+<core:FragmentDefinition xmlns:core="sap.ui.core" xmlns="sap.m" xmlns:l="sap.ui.layout">
+  <!-- Sprint 28 - create a Draft timesheet. The backend REQUIRES the
+       employee and the reporting period; the employee picker shows
+       exactly the rows the signed-in role may see. -->
+  <Dialog id="createTsDlg" title="New Timesheet (Draft)" contentWidth="28rem">
+    <content>
+      <l:VerticalLayout class="sapUiSmallMargin" width="100%">
+        <MessageStrip visible="{= ${ts>/ctError} ? true : false }"
+                     type="Error" showIcon="true" text="{ts>/ctError}"/>
+        <Label text="Employee"/>
+        <Select id="tsEmployee" forceSelection="true" width="100%"
+                selectedKey="{ts>/draft/employee_ID}"
+                items="{ts>/employeeOptions}">
+          <items>
+            <core:Item key="{ts>ID}" text="{ts>text}"/>
+          </items>
+        </Select>
+        <Label text="Period from"/>
+        <DatePicker value="{ts>/draft/periodFromDate}" width="100%"/>
+        <Label text="Period to"/>
+        <DatePicker value="{ts>/draft/periodToDate}" width="100%"/>
+      </l:VerticalLayout>
+    </content>
+    <buttons>
+      <Button text="Cancel" press=".onCancelCreate"/>
+      <Button text="Save" type="Emphasized" press=".onSaveCreate" enabled="{=!${ts>/ctBusy}}"/>
+    </buttons>
+  </Dialog>
+</core:FragmentDefinition>

@@ -19,4 +19,9 @@ module.exports = cds.service.impl(async function () {
   require("./handlers/leave-balance")(this);
   require("./handlers/leave-approval")(this);
   require("./handlers/approval-history")(this);
+
+  // SPRINT 10: generic workflow integration (bound StartWorkflow
+  // action + business callbacks). Requires the WorkflowService to
+  // be loaded so its engine entities exist.
+  require("./handlers/leave-workflow")(this);
 });

@@ -185,11 +185,57 @@ async function recalculatePayroll(req) {
 
 /**
  * Action: Reject Payroll Process Record
+ * ------------------------------------------------------
+ * Validations (mirrors RecalculatePayroll so both actions
+ * behave the same way):
+ *   * process record and period must exist,
+ *   * a period that is locked can no longer be touched,
+ *   * already-final records (Approved / Published / Rejected)
+ *     cannot be rejected again,
+ *   * remarks ("reason") are mandatory - a payroll reject is
+ *     a compliance event that must carry a reason.
  */
 async function rejectPayroll(req) {
   const tx = cds.transaction(req);
   const processId = req.params[0]?.ID || req.params[0];
   const { reason } = req.data;
+
+  // 1. Fetch Process Record & Period (REJECT used to reference
+  //    an undefined `processRec` here and crashed with a 500).
+  const processRec = await tx.run(
+    SELECT.one.from("ewms.db.payroll.PayrollProcess").where({ ID: processId }),
+  );
+  if (!processRec)
+    return req.error(404, "Target Payroll Process record not found.");
+
+  const period = await tx.run(
+    SELECT.one
+      .from("ewms.db.payroll.PayrollPeriod")
+      .where({ ID: processRec.payrollPeriod_ID }),
+  );
+  if (!period)
+    return req.error(404, "Payroll period for this process record not found.");
+
+  if (period.isLocked)
+    return req.error(400, "Cannot reject payroll for a locked period.");
+
+  // 2. Only open records can be rejected - a final record stays
+  //    final, otherwise an approver's decision could be undone
+  //    silently through this side door.
+  if (processRec.processStatus === "Approved" || processRec.processStatus === "Published") {
+    return req.error(
+      400,
+      `Cannot reject a payroll record in '${processRec.processStatus}' status.`,
+    );
+  }
+  if (processRec.processStatus === "Rejected") {
+    return req.error(400, "Payroll record is already rejected.");
+  }
+
+  // 3. Rejection needs a reason (mandatory in LeaveRejection too).
+  if (!reason || !String(reason).trim()) {
+    return req.error(400, "A reason is required when rejecting a payroll record.");
+  }
 
   await tx.run(
     UPDATE("ewms.db.payroll.PayrollProcess")
@@ -203,7 +249,7 @@ async function rejectPayroll(req) {
       action: "Rejected",
       performedBy_ID: req.user.attr?.employeeId || processRec.employee_ID,
       performedOn: new Date().toISOString(),
-      remarks: reason || "Payroll process rejected during review.",
+      remarks: reason,
     }),
   );
 

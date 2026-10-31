@@ -1,0 +1,6 @@
+ID,requirementCode,name,documentType,appliesToEmploymentType,isMandatory,requiresIssueDate,expiryAlertDays,status,effectiveFrom,effectiveTo,description
+40000000-0000-0000-0000-000000000001,REQ0001,PAN Card,PAN,,true,true,30,Active,2026-01-01,,Mandatory identity document for all employees
+40000000-0000-0000-0000-000000000002,REQ0002,Passport Copy,Passport,,false,false,90,Active,2026-01-01,,Optional identification document
+40000000-0000-0000-0000-000000000003,REQ0003,Degree Certificate,Degree,Permanent,true,true,0,Active,2026-01-01,,Mandatory education proof for permanent employees
+40000000-0000-0000-0000-000000000004,REQ0004,Employment Contract,EmploymentContract,,true,false,0,Active,2026-01-01,,Signed contract for every employee
+40000000-0000-0000-0000-000000000005,REQ0005,Medical Fitness Certificate,MedicalCertificate,,true,false,180,Active,2026-01-01,,Renewable fitness certificate with long alert window

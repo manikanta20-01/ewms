@@ -2,6 +2,8 @@
 
 > A modular Enterprise Workforce Management System built using **SAP CAP (Node.js)**, **SAP HANA Cloud**, **SAP Fiori Elements**, and **SAP Business Technology Platform (BTP)**.
 
+📚 **Full system documentation:** [docs/EWMS_COMPLETE_SYSTEM_GUIDE.md](docs/EWMS_COMPLETE_SYSTEM_GUIDE.md) — every module, permission matrix, workflows, shared services, configuration, and testing.
+
 ---
 Based on the project archive you uploaded, your **Sprint 9 – Security & Authorization** is essentially complete from an implementation perspective. I found the expected security artifacts, including:
 
@@ -911,16 +913,129 @@ http://localhost:4004/odata/v4
 
 # Future Roadmap
 
-- Leave Management
-- Payroll
 - Performance Management
 - Asset Management
-- Recruitment
-- Security
-- Notifications
 - Reports
 - Fiori Applications
 - SAP BTP Deployment
+
+---
+
+# Sprint 12 – Offer Letter + Onboarding + Employee Conversion
+
+**Status:** ✅ Completed
+
+Sprint 12 adds the hiring journey to EWMS, built entirely on the
+existing building blocks (Employee Core, generic Workflow Engine,
+Sprint 9 authorization, shared Audit, Notifications as an extension
+point only):
+
+- **Offer letter lifecycle** – `Draft → PendingApproval → Approved →
+  Sent → Accepted`, plus `Rejected`, `Withdrawn`, `Expired`. Invalid
+  transitions are blocked, accepted offers are frozen, and direct
+  PATCH requests can never change the status.
+- **Workflow approval** – `SubmitForApproval` starts the seeded
+  definition `WF-OFFER-STD` in the EXISTING workflow engine; the task
+  approval callback syncs the offer status. No second workflow engine.
+- **Compensation protection** – offers are visible to HR/Finance/
+  SystemAdmin; the reporting manager sees their offers with the
+  offered CTC masked. Plain employees have no access at all.
+- **Onboarding** – accepting a sent offer automatically creates an
+  onboarding case with tasks seeded from the reusable checklist
+  templates and per-case document requirements
+  (`Required/Submitted/Verified/Rejected/Waived`).
+  `CompleteOnboarding` blocks while mandatory work is open.
+- **Employee conversion** – `ConvertToEmployee` (HRAdmin/SystemAdmin
+  only, declarative `@restrict`) creates the employee + active
+  assignment in the EXISTING Employee Core and is **idempotent**:
+  repeat calls link the existing employee and never create duplicates.
+  Audit rows are written through the shared audit helper.
+
+Full details: `docs/sprints/SPRINT-12.md`.
+Setup and test instructions: `SETUP.md`.
+Automated tests: `npm test` (`test/recruitment.test.js`, 31 tests,
+natural process exit). Manual API examples: `test/recruitment.http`.
+
+---
+
+# Sprint 13 – Performance Management
+
+**Status:** ✅ Completed
+
+Sprint 13 adds performance reviews and performance goals, reusing the
+Employee Core, the generic Workflow Engine, the shared Notification
+core, the shared Audit helper and the Sprint 9 role model:
+
+- **Performance reviews** – `Draft → PendingReview → InReview →
+  Submitted → Approved → Completed`, with `Cancelled` as a side exit
+  from every non-final state. Status can only change through the
+  bound actions – direct PATCH manipulation is blocked, frozen
+  (Completed/Approved/Cancelled) reviews are immutable, and the
+  overall rating must come from the controlled 1–5 scale
+  (`Unsatisfactory … Outstanding`).
+- **Workflow approval** – `SubmitReview` starts the seeded definition
+  `WF-REVIEW-STD` in the EXISTING Sprint 10 engine; the LevelHR
+  approver's task decision is synced back by business callbacks
+  (Approved → Approved, Rejected → back to Draft). No new workflow
+  engine.
+- **Performance goals** – `Draft → Active → Completed (+ Cancelled)`
+  with weight validation (0 < weight ≤ 100), sane due dates, and an
+  optional link to the review that evaluates them (no goal data is
+  duplicated into the review).
+- **Sensitive-data protection** – row-level `@restrict`: an employee
+  sees only their own reviews/goals, the reviewer only their assigned
+  reviews, the goal assignee only their goals, and HR everything.
+  A colleague's record returns 404 to an unauthorized reader.
+- **Notifications & audit** – review assignment/approval/completion
+  and goal activation notify the right person via the shared
+  `notify()` core (category PERFORMANCE); every lifecycle action
+  writes audit rows through the shared audit helper.
+
+Full details: `docs/sprints/SPRINT-13.md`.
+Automated tests: `npm test` (now 73 tests incl. 42 in
+`test/performance.test.js`, natural process exit, code 0).
+
+---
+
+# Sprint 14 – Asset Management
+
+**Status:** ✅ Completed
+
+Sprint 14 adds complete asset lifecycle management, built on the
+existing Employee Core, Sprint 9 security, shared Notification core
+and shared Audit helper:
+
+- **Asset master + categories** – maintainable `AssetCategory` rows
+  (no hard-coded categories) and `Asset` records with unique auto
+  tags (AST…), serial numbers, procurement/warranty data and a
+  controlled condition scale (`New/Good/Fair/Damaged/Critical`).
+- **Assignment history preserved** – custody is a set of
+  `AssetAssignment` rows (Active → Returned), never an overwritten
+  employee field. `transferAsset` closes the old row and opens a new
+  one; `returnAsset` records the actual return date and return
+  condition (Damaged/Critical returns route the asset to repair).
+- **Controlled lifecycle** – `Available → Assigned → (return) →
+  Available/InRepair`, with role-restricted actions for repair,
+  lost, damaged, inspection (condition + outcome), retirement and
+  disposal. Direct PATCH can never move status/condition/holder;
+  disposed assets are immutable; retried actions fail with clear
+  409/400 instead of duplicating custody records.
+- **Full history** – every event (assigned, transferred, returned,
+  inspected, repaired, lost, retired, disposed) is appended to
+  `AssetEvent`, so the complete story of an asset is always
+  reconstructable. Designed so Sprint 21 (Exit Management) can query
+  an employee's outstanding and returned assets directly.
+- **Security** – row-level `@restrict`: employees see only assets
+  they hold and their own assignments; managers see assignments they
+  created; HR/asset admins see and manage everything; all lifecycle
+  actions are HR/asset-admin only.
+- **Notifications & audit** – assignment/transfer/return/lost events
+  notify the right person via the shared `notify()` core (category
+  ASSET); every action writes audit rows through the shared helper.
+
+Full details: `docs/sprints/SPRINT-14.md`.
+Automated tests: `npm test` (now 117 tests incl. 44 in
+`test/asset.test.js`, natural process exit, code 0).
 
 ---
 

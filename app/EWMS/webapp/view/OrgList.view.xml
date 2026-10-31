@@ -1,0 +1,55 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m"
+          controllerName="ewms.EWMS.controller.OrgList">
+  <!-- Sprint 27 - Department list. Departments are readable only by
+       HR roles (@restrict); other roles get the backend's real answer
+       in the error strip. -->
+  <Page id="orgListPage" title="Departments" showNavButton="false">
+    <headerContent>
+      <Toolbar>
+        <SearchField id="orgSearch" width="16rem" placeholder="Search department"
+                     liveChange=".onSearch" search=".onSearch"/>
+        <ToolbarSpacer/>
+        <Button id="btnPrev" icon="sap-icon://navigation-left-arrow" press=".onPrevPage"/>
+        <Text text="{org>/pageLabel}" class="sapUiSmallMarginEnd"/>
+        <Button id="btnNext" icon="sap-icon://navigation-right-arrow" press=".onNextPage"/>
+      </Toolbar>
+    </headerContent>
+    <subHeader>
+      <Toolbar>
+        <MessageStrip visible="{org>/error}" type="Error" showIcon="true" text="{org>/errorText}"/>
+      </Toolbar>
+    </subHeader>
+    <content>
+      <Table id="orgTable"
+             items="{org>/rows}"
+             busyIndicatorDelay="0"
+             busy="{org>/busy}"
+             mode="None">
+        <columns>
+          <Column width="8rem"><Text text="Code"/></Column>
+          <Column width="14rem"><Text text="Department"/></Column>
+          <Column width="14rem"><Text text="Business unit"/></Column>
+          <Column width="12rem"><Text text="Location"/></Column>
+          <Column width="8rem"><Text text="Status"/></Column>
+        </columns>
+        <items>
+          <ColumnListItem type="Active" press=".onDepartmentPress">
+            <cells>
+              <Text text="{org>departmentCode}"/>
+              <Text text="{org>departmentName}"/>
+              <Text text="{org>businessUnitName}"/>
+              <Text text="{org>locationName}"/>
+              <Text text="{org>statusText}"/>
+            </cells>
+          </ColumnListItem>
+        </items>
+      </Table>
+    </content>
+    <footer>
+      <Toolbar>
+        <ToolbarSpacer/>
+        <Text text="{org>/footerLabel}"/>
+      </Toolbar>
+    </footer>
+  </Page>
+</mvc:View>

@@ -1,0 +1,55 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns:f="sap.f" xmlns:core="sap.ui.core" xmlns="sap.m"
+          displayBlock="true"
+          controllerName="ewms.EWMS.controller.Main">
+  <f:FlexibleColumnLayout id="fcl"
+                          layout="{app>/layout}">
+    <f:beginColumnPages>
+      <Page id="menu" title="EWMS Modules">
+        <content>
+          <VBox class="sapUiSmallMargin">
+            <Title text="EWMS" level="H1" />
+            <Text text="Enterprise Workforce Management System" />
+          </VBox>
+          <VBox class="sapUiSmallMargin">
+            <Label text="Local dev identity (mocked CAP users)" />
+            <ComboBox id="userCombo"
+                      items="{app>/mockUsers}"
+                      selectedKey="{app>/selectedUser}"
+                      placeholder="Pick a user…"
+                      width="100%">
+              <items>
+                <core:Item key="{app>id}" text="{app>label}" />
+              </items>
+            </ComboBox>
+            <HBox class="sapUiSmallMarginTop">
+              <Button text="Sign in" press=".onSignIn" type="Emphasized"
+                      width="8rem" class="sapUiSmallMarginEnd" />
+              <Button text="Sign out" press=".onSignOut" width="5rem" />
+            </HBox>
+            <Label text="Signed in as" />
+            <Text text="{app>/user/label} {app>/user/roles}" />
+            <Text text="Dev convenience only; the backend authorization rules decide what your requests may read." wrapping="true" class="sapUiTinyMarginTop" />
+          </VBox>
+          <List id="navList"
+                items="{app>/nav}"
+                mode="None"
+                headerText="Modules">
+            <items>
+              <StandardListItem title="{app>title}"
+                                icon="{app>icon}"
+                                info="{app>info}"
+                                type="Active"
+                                press=".onNavItemPress" />
+            </items>
+          </List>
+        </content>
+      </Page>
+    </f:beginColumnPages>
+    <f:midColumnPages>
+      <!-- Router inserts Home + EmployeeList views here (controlAggregation in manifest). -->
+    </f:midColumnPages>
+    <f:endColumnPages>
+      <!-- Router inserts EmployeeDetail view here (manifest target override). -->
+    </f:endColumnPages>
+  </f:FlexibleColumnLayout>
+</mvc:View>

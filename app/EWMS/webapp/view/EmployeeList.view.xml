@@ -1,0 +1,81 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:core="sap.ui.core"
+          controllerName="ewms.EWMS.controller.EmployeeList">
+  <Page id="empListPage" title="Employee Directory" showNavButton="false">
+    <headerContent>
+      <Toolbar>
+        <SearchField id="empSearch" width="16rem" placeholder="Search name / code"
+                     liveChange=".onSearch" search=".onSearch"/>
+        <Select id="selEmploymentType" forceSelection="false"
+                selectedKey="{emp>/selEmploymentType}"
+                change=".onFilterChange"
+                tooltip="Filter by employment type">
+          <items>
+            <core:Item key="" text="All employment types" />
+            <core:Item key="Permanent" text="Permanent" />
+            <core:Item key="Contract" text="Contract" />
+            <core:Item key="Intern" text="Intern" />
+            <core:Item key="Trainee" text="Trainee" />
+            <core:Item key="Consultant" text="Consultant" />
+          </items>
+        </Select>
+        <Select id="selStatus" forceSelection="false"
+                selectedKey="{emp>/selStatus}"
+                change=".onFilterChange"
+                tooltip="Filter by status">
+          <items>
+            <core:Item key="" text="All statuses" />
+            <core:Item key="Active" text="Active" />
+            <core:Item key="Inactive" text="Inactive" />
+            <core:Item key="Closed" text="Closed" />
+            <core:Item key="Pending" text="Pending" />
+          </items>
+        </Select>
+        <ToolbarSpacer/>
+        <Button id="btnPrev" icon="sap-icon://navigation-left-arrow" press=".onPrevPage"/>
+        <Text text="{emp>/pageLabel}" class="sapUiSmallMarginEnd"/>
+        <Button id="btnNext" icon="sap-icon://navigation-right-arrow" press=".onNextPage"/>
+      </Toolbar>
+    </headerContent>
+    <subHeader>
+      <Toolbar>
+        <MessageStrip visible="{emp>/error}" type="Error" showIcon="true" text="{emp>/errorText}"/>
+      </Toolbar>
+    </subHeader>
+    <content>
+      <Table id="empTable"
+             items="{emp>/rows}"
+             busyIndicatorDelay="0"
+             busy="{emp>/busy}"
+             noDataText="{emp>/rows.length ? '' : 'No employee data available to your role'}"
+             growing="false"
+             mode="None">
+        <columns>
+          <Column width="8rem"><Text text="Code"/></Column>
+          <Column width="12rem"><Text text="Name"/></Column>
+          <Column width="14rem"><Text text="Email"/></Column>
+          <Column width="9rem"><Text text="Employment type"/></Column>
+          <Column width="8rem"><Text text="Work mode"/></Column>
+          <Column width="10rem"><Text text="Status"/></Column>
+        </columns>
+        <items>
+          <ColumnListItem type="Active" press=".onEmployeePress">
+            <cells>
+              <Text text="{emp>employeeCode}"/>
+              <Text text="{emp>firstName} {emp>lastName}"/>
+              <Text text="{emp>email}"/>
+              <Text text="{emp>employmentType}"/>
+              <Text text="{emp>workMode}"/>
+              <Text text="{emp>statusText}"/>
+            </cells>
+          </ColumnListItem>
+        </items>
+      </Table>
+    </content>
+    <footer>
+      <Toolbar>
+        <ToolbarSpacer/>
+        <Text text="{emp>/footerLabel}"/>
+      </Toolbar>
+    </footer>
+  </Page>
+</mvc:View>

@@ -1,0 +1,8 @@
+ID,definition_ID,stepNumber,name,approverType,approverValue,approvalMode,slaDays,skipIfSameAsRequester,mandatoryStep
+f2000000-0000-0000-0000-000000000001,f1000000-0000-0000-0000-000000000001,1,Manager Approval,Manager,,SingleSequential,3,true,true
+f2000000-0000-0000-0000-000000000002,f1000000-0000-0000-0000-000000000001,2,HR Approval,LevelHR,,SingleSequential,5,true,true
+f2000000-0000-0000-0000-000000000003,f1000000-0000-0000-0000-000000000002,1,HR Approval,LevelHR,,SingleSequential,5,true,true
+f2000000-0000-0000-0000-000000000004,f1000000-0000-0000-0000-000000000003,1,HR Approval,LevelHR,,SingleSequential,5,true,true
+f2000000-0000-0000-0000-000000000005,f1000000-0000-0000-0000-000000000004,1,Manager Approval,Manager,,SingleSequential,3,true,true
+f2000000-0000-0000-0000-000000000006,f1000000-0000-0000-0000-000000000005,1,Manager Approval,Manager,,SingleSequential,3,true,true
+f2000000-0000-0000-0000-000000000007,f1000000-0000-0000-0000-000000000005,2,HR Approval,LevelHR,,SingleSequential,5,true,true

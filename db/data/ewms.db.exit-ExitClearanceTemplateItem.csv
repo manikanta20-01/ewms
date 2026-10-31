@@ -1,0 +1,8 @@
+ID,template_ID,sequence,itemCode,title,category,responsibleRole,mandatory,description
+g2000000-0000-0000-0000-000000000001,g1000000-0000-0000-0000-000000000001,1,CLS-ASSET,Return all company assets,Asset,HR,true,Verified against the Sprint 14 asset ledger - zero active asset assignments
+g2000000-0000-0000-0000-000000000002,g1000000-0000-0000-0000-000000000001,2,CLS-DOC,Exit document records complete,Document,HR,true,At least one required exit document linked to the case (Sprint 17 store)
+g2000000-0000-0000-0000-000000000003,g1000000-0000-0000-0000-000000000001,3,CLS-HR,Exit interview completed,HR,HR,true,HR exit interview or required HR tasks
+g2000000-0000-0000-0000-000000000004,g1000000-0000-0000-0000-000000000001,4,CLS-MGR,Manager clearance - handover confirmed,Manager,Manager,true,Resolved to the reporting manager at completion time
+g2000000-0000-0000-0000-000000000005,g1000000-0000-0000-0000-000000000001,5,CLS-IT,IT access revocation confirmed,IT,ITAdmin,true,Recorded by SystemAdmin; no external IdP integration exists (documented)
+g2000000-0000-0000-0000-000000000006,g1000000-0000-0000-0000-000000000001,6,CLS-FIN,Finance dues confirmation,Finance,Finance,true,FinanceManager or PayrollExecutive confirmation
+g2000000-0000-0000-0000-000000000007,g1000000-0000-0000-0000-000000000001,7,CLS-KB,Optional: knowledge-base handover summary,Manager,Manager,false,Optional knowledge transfer documentation

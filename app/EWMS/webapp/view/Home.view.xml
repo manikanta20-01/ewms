@@ -1,0 +1,21 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m"
+          controllerName="ewms.EWMS.controller.Home">
+  <Page id="homePage" title="Home" showNavButton="false">
+    <content>
+      <VBox class="sapUiLargeMargin">
+        <Title text="EWMS" level="H3"/>
+        <Text text="Enterprise Workforce Management System — local foundation build (Sprint 26)." wrapping="true"/>
+        <Label text="Backend connection"/>
+        <HBox class="sapUiSmallMarginTop">
+          <Text text="{home>/connText}" class="sapUiSmallMarginEnd"/>
+          <Button id="btnRecheck" text="Check connection" press=".onCheckConnection"/>
+        </HBox>
+        <MessageStrip id="homeError" visible="{home>/error}" type="Error" showIcon="true" text="{home>/errorText}" class="sapUiSmallMarginTop"/>
+        <Label text="Live data"/>
+        <Text text="{home>/empCountText}"/>
+        <Label text="About this build"/>
+        <Text text="This foundation provides the application shell, navigation and the Employee Directory demonstration screen. The remaining modules are intentionally shown in the side panel as planned for later sprints; they are not reachable dead ends." wrapping="true"/>
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

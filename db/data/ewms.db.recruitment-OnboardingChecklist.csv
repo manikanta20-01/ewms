@@ -1,0 +1,2 @@
+ID,checklistCode,name,description,isActive
+a1000000-0000-0000-0000-000000000001,CHK-STD-ONB,Standard Employee Onboarding,Default task list copied into every new onboarding case,true

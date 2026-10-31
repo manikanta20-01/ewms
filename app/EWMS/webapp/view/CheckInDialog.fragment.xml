@@ -1,0 +1,49 @@
+<core:FragmentDefinition xmlns:core="sap.ui.core"
+                        xmlns="sap.m"
+                        fragmentName="ewms.EWMS.view.CheckInDialog"
+                        type="XML">
+  <!-- Sprint 28 - Check-in dialog. ONE explicit, user-triggered
+       check-in per dialog call. Location is requested by the browser
+       ONLY if the employee ticks "include location"; a denied
+       permission cancels the request instead of sending zero coords. -->
+  <Dialog id="ciDialog" title="Check in" 
+          contentWidth="26rem">
+    <content>
+      <VBox class="sapUiSmallMargin">
+        <Label text="Employee" wrapping="true" width="100%"/>
+        <ComboBox id="ciEmployee" width="100%"
+                  items="{att>/employeeOptions}"
+                  selectedKey="{att>/ciForm/employee_ID}">
+          <items><core:Item key="{att>ID}" text="{att>text}"/></items>
+        </ComboBox>
+        <Label text="Date" wrapping="true" width="100%" class="sapUiTinyMarginTop"/>
+        <DatePicker id="ciDate" width="100%"
+                    valueFormat="yyyy-MM-dd" displayFormat="yyyy-MM-dd"
+                    value="{att>/ciForm/attendanceDate}"/>
+        <Label text="Check-in time" wrapping="true" width="100%" class="sapUiTinyMarginTop"/>
+        <TimePicker id="ciTime" width="100%"
+                    valueFormat="HH:mm" displayFormat="HH:mm"
+                    value="{att>/ciForm/checkIn}"/>
+        <Label text="Work location" wrapping="true" width="100%" class="sapUiTinyMarginTop"/>
+        <Select id="ciLocSel" width="100%"
+                selectedKey="{att>/ciForm/workLocation}">
+          <core:Item key="Office" text="Office"/>
+          <core:Item key="WorkFromHome" text="Work from home"/>
+        </Select>
+        <CheckBox id="ciUseLoc" text="Include my location (geofence validation)"
+                  selected="{att>/ciForm/useLocation}"
+                  select=".onCheckInLocationToggle"
+                  class="sapUiSmallMarginTop"/>
+        <Text wrapping="true" width="100%"
+              text="Coordinates are sent once with this check-in and evaluated by the backend geofence validator. They are never collected in the background."/>
+        <MessageStrip visible="{att>/ciError}" type="Error" showIcon="true"
+                      text="{att>/ciError}" class="sapUiSmallMarginTop"/>
+      </VBox>
+    </content>
+    <buttons>
+      <Button text="Check in" type="Emphasized" press=".onConfirmCheckIn"
+              busy="{att>/ciBusy}"/>
+      <Button text="Cancel" press=".onCloseCheckIn"/>
+    </buttons>
+  </Dialog>
+</core:FragmentDefinition>

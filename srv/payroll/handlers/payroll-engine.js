@@ -1,6 +1,12 @@
 const cds = require("@sap/cds");
 const { SELECT, INSERT, UPDATE, DELETE } = cds.ql;
 const { persistAudit } = require("../../common/utils/audit");
+// SPRINT 15: approved timesheets are consumed (marked as taken into
+// account) by the engine while it processes an employee - INSIDE the
+// same transaction, so a payroll failure never leaves a half-
+// consumed sheet behind. The consumption module calculates nothing:
+// all money math stays in THIS engine.
+const timesheetPayroll = require("../../timesheet/handlers/timesheet-payroll");
 
 /**
  * Enterprise Payroll Engine Implementation
@@ -45,17 +51,47 @@ async function processPayroll(req) {
 
   let successCount = 0;
   let failedCount = 0;
+  let skippedCount = 0;
 
-  // Clear previous unprocessed calculations for this period
+  // Clear previous UNFINAL calculations for this period. 'Rejected'
+  // records are also recalculated on a re-run: keeping the stale row
+  // while inserting a fresh one produced two process rows for the same
+  // employee + period. Only Approved/Published records (handled below)
+  // survive a re-run untouched.
   await tx.run(
     DELETE.from("ewms.db.payroll.PayrollProcess").where({
       payrollPeriod_ID: periodId,
-      processStatus: { in: ["Pending", "Processed"] },
+      processStatus: { in: ["Pending", "Processed", "Rejected"] },
     }),
   );
 
+  // ----------------------------------------------------------
+  // DUPLICATE-PROCESSING PROTECTION: employees whose payroll for
+  // this period was already Approved/Published keep their frozen
+  // record. Re-running the batch (e.g. to pick up late joiners)
+  // must silently SKIP them instead of creating a second Process
+  // row for the same employee + period.
+  // ----------------------------------------------------------
+  const alreadyFinalEmployees = new Set();
+  const finalRecords = await tx.run(
+    SELECT.from("ewms.db.payroll.PayrollProcess").where({
+      payrollPeriod_ID: periodId,
+      processStatus: { in: ["Approved", "Published"] },
+    }),
+  );
+  for (const rec of finalRecords) {
+    alreadyFinalEmployees.add(rec.employee_ID);
+  }
+
   // 3. Process Batch Iteration
   for (const sal of activeSalaries) {
+    // Approved/Published record for this employee already exists:
+    // skip instead of duplicating (safe retry behavior).
+    if (alreadyFinalEmployees.has(sal.employee_ID)) {
+      skippedCount++;
+      continue;
+    }
+
     try {
       const structId = sal.salaryStructure_ID;
 
@@ -182,6 +218,20 @@ async function processPayroll(req) {
         }),
       );
 
+      // SPRINT 15 - TIMESHEET 'CONSUMPTION: mark this employee's
+      // approved, unconsumed timesheets (whose period intersects this
+      // payroll period) as taken into account. Same transaction =
+      // atomic with the process insert; a second run finds nothing to
+      // consume, so approved hours are never counted twice.
+      // NOTE: consuming a sheet NEVER means it was paid - payment
+      // status remains with PayrollProcess/period lifecycle.
+      await timesheetPayroll.consumeApprovedTimesheets(
+        tx,
+        req,
+        sal.employee_ID,
+        { ID: periodId, startDate: period.startDate, endDate: period.endDate, payrollCode: period.payrollCode },
+      );
+
       successCount++;
     } catch (err) {
       console.error(
@@ -219,10 +269,10 @@ async function processPayroll(req) {
     "CREATE",
     "PayrollProcesses",
     null,
-    { payrollPeriod_ID: periodId, processed: successCount, failed: failedCount },
+    { payrollPeriod_ID: periodId, processed: successCount, skipped: skippedCount, failed: failedCount },
   );
 
-  return `Payroll Execution Summary for Period '${period.payrollCode}': Processed: ${successCount}, Exceptions/Failed: ${failedCount}.`;
+  return `Payroll Execution Summary for Period '${period.payrollCode}': Processed: ${successCount}, Skipped (already approved/published): ${skippedCount}, Exceptions/Failed: ${failedCount}.`;
 }
 
 /**

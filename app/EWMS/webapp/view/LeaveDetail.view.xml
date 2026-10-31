@@ -1,0 +1,114 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:l="sap.ui.layout"
+          xmlns:f="sap.f"
+          controllerName="ewms.EWMS.controller.LeaveDetail">
+  <!-- Sprint 28 - Leave detail (end column). The request summary plus
+       its real multi-level approval stages. Approve/Reject patch the
+       ACTUAL LeaveApproval stage rows; the backend routes level 1 ->
+       level 2 and protects balances. -->
+  <f:DynamicPage id="leaveDetailPage" headerExpanded="true">
+    <f:title>
+      <DynamicPageTitle>
+        <heading>
+          <Title text="Leave {lvD>/leaveNumber} — {lvD>/statusText}"/>
+        </heading>
+      </DynamicPageTitle>
+    </f:title>
+    <f:header>
+      <DynamicPageHeader>
+        <Toolbar>
+          <Button text="Back to list" icon="sap-icon://nav-back" press=".onNavBack"/>
+        </Toolbar>
+      </DynamicPageHeader>
+    </f:header>
+    <f:content>
+      <VBox class="sapUiSmallMargin">
+        <MessageStrip visible="{lvD>/error}" type="Error" showIcon="true"
+                      text="{lvD>/errorText}"/>
+        <BusyIndicator visible="{lvD>/busy}"/>
+        <Panel headerText="Request" visible="{= !${lvD>/busy}}">
+          <l:Grid defaultSpan="XL4 L6 M6 S12">
+            <VBox><Label text="Leave type"/><Text text="{lvD>/typeText}"/></VBox>
+            <VBox><Label text="From"/><Text text="{lvD>/fromDate}"/></VBox>
+            <VBox><Label text="To"/><Text text="{lvD>/toDate}"/></VBox>
+            <VBox><Label text="Total days"/><Text text="{lvD>/totalDays}"/></VBox>
+            <VBox><Label text="Half day"/><Text text="{lvD>/halfDayText}"/></VBox>
+            <VBox><Label text="Paid"/><Text text="{lvD>/paidText}"/></VBox>
+            <VBox><Label text="Applied on"/><Text text="{lvD>/appliedOn}"/></VBox>
+            <VBox><Label text="Status"/><Text text="{lvD>/statusText}"/></VBox>
+            <VBox><Label text="Reason"/><Text text="{lvD>/reason}" wrapping="true"/></VBox>
+            <VBox><Label text="Remarks"/><Text text="{lvD>/remarksText}" wrapping="true"/></VBox>
+          </l:Grid>
+        </Panel>
+        <Panel headerText="Approval stages">
+          <Table items="{lvD>/approvals}" noDataText="No approval stages recorded">
+            <columns>
+              <Column width="8rem"><Text text="Level"/></Column>
+              <Column width="20rem"><Text text="Approver"/></Column>
+              <Column width="12rem"><Text text="Decision"/></Column>
+              <Column width="14rem"><Text text="Decided on"/></Column>
+              <Column><Text text="Action"/></Column>
+            </columns>
+            <items>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{lvD>level}"/>
+                  <Text text="{lvD>approverText}"/>
+                  <Text text="{lvD>decisionText}"/>
+                  <Text text="{lvD>decisionDate}"/>
+                  <HBox visible="{lvD>/pending}">
+                    <Button icon="sap-icon://accept" text="Approve" type="Accept"
+                            press=".onApprovePress"/>
+                    <Button icon="sap-icon://decline" text="Reject" type="Reject"
+                            press=".onRejectPress" class="sapUiSmallMarginBegin"/>
+                  </HBox>
+                  <Text visible="{= !${lvD>/pending}}" text="—"/>
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+          <MessageStrip visible="{lvD>/approvalBusy}" type="Information"
+                        text="Recording your decision…"/>
+          <MessageStrip visible="{lvD>/approvalError}" type="Error" showIcon="true"
+                        text="{lvD>/approvalError}" class="sapUiTinyMarginTop"/>
+        </Panel>
+        <Panel headerText="Approval audit history (HR/manager roles)">
+          <Table items="{lvD>/histories}"
+                 noDataText="{lvD>/historyEmptyText}">
+            <columns>
+              <Column width="28rem"><Text text="Action"/></Column>
+              <Column width="16rem"><Text text="Performed on"/></Column>
+              <Column width="20rem"><Text text="By"/></Column>
+              <Column><Text text="Remarks"/></Column>
+            </columns>
+            <items>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{lvD>action}" wrapping="true"/>
+                  <Text text="{lvD>performedOn}"/>
+                  <Text text="{lvD>performedByText}"/>
+                  <Text text="{lvD>remarks}" wrapping="true"/>
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </Panel>
+      </VBox>
+    </f:content>
+  </f:DynamicPage>
+
+  <!-- Rejection needs remarks; the backend REQUIRES them (400 without). -->
+  <Dialog id="lvRejectDialog" title="Reject leave request">
+    <content>
+      <VBox class="sapUiSmallMargin">
+        <Label text="Remarks (required)" wrapping="true" width="100%"/>
+        <TextArea id="lvRejectRemarks" width="100%" rows="3"/>
+        <MessageStrip visible="{lvD>/rejectError}" type="Error" showIcon="true"
+                      text="{lvD>/rejectError}" class="sapUiSmallMarginTop"/>
+      </VBox>
+    </content>
+    <buttons>
+      <Button text="Confirm rejection" type="Reject" press=".onConfirmReject"/>
+      <Button text="Cancel" press=".onCloseReject"/>
+    </buttons>
+  </Dialog>
+</mvc:View>

@@ -2,6 +2,7 @@ const cds = require("@sap/cds");
 const { SELECT, INSERT, UPDATE } = cds.ql;
 const { required } = require("../../common/utils/validation");
 const { generateCode } = require("../../common/utils/code-generator");
+const { assertSelfCreate, assertSelfWrite } = require("../../common/utils/self-write-guard");
 
 module.exports = (srv) => {
   const { LeaveRequests, LeaveTypes } = srv.entities;
@@ -12,6 +13,12 @@ module.exports = (srv) => {
   srv.before("CREATE", "LeaveRequests", async (req) => {
     const tx = cds.transaction(req);
     const { employee_ID, leaveType_ID, fromDate, toDate } = req.data;
+
+    // Row-level self-service guard: @restrict where-clauses only
+    // filter reads, not CREATE - without this a plain employee
+    // could file a leave request for someone else. req.reject
+    // throws, so a rejected request never reaches the rules below.
+    await assertSelfCreate(req, "employee_ID");
 
     // 1. Mandatory Fields Presence Validation
     required(req, "employee_ID", "Employee");
@@ -183,6 +190,15 @@ module.exports = (srv) => {
   srv.before("UPDATE", "LeaveRequests", async (req) => {
     const tx = cds.transaction(req);
     const targetId = req.data.ID || req.params?.[0]?.ID || req.params?.[0];
+
+    // Row-level self-service guard: an plain Employee may never
+    // move their request (or any other) to another employee via
+    // UPDATE. Senders of admin/HR roles bypass (matching the
+    // unrestricted grants in leave-security.cds). req.reject
+    // throws, so no further UPDATE validation runs afterwards.
+    if ("employee_ID" in (req.data || {})) {
+      await assertSelfWrite(req, "employee_ID");
+    }
 
     if (!targetId) return;
 

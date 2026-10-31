@@ -1,0 +1,33 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:l="sap.ui.layout"
+          controllerName="ewms.EWMS.controller.OrgDetail">
+  <!-- Sprint 27 - Department detail: master data + related projects.
+       All data comes from real services; nothing is invented here. -->
+  <Page id="orgDetailPage" title="Department — {dOrg>/dept/departmentCode}"
+        showNavButton="true" navButtonPress=".onNavBack">
+    <content>
+      <VBox class="sapUiSmallMargin">
+        <MessageStrip visible="{dOrg>/error}" type="Error" showIcon="true" text="{dOrg>/errorText}"/>
+        <BusyIndicator visible="{dOrg>/busy}"/>
+        <Panel headerText="Department" visible="{= !${dOrg>/busy}}">
+          <l:Grid defaultSpan="XL4 L6 M6 S12">
+            <VBox><Label text="Code"/><Text text="{dOrg>/dept/departmentCode}"/></VBox>
+            <VBox><Label text="Name"/><Text text="{dOrg>/dept/departmentName}"/></VBox>
+            <VBox><Label text="Description"/><Text text="{dOrg>/dept/description}"/></VBox>
+            <VBox><Label text="Status"/><Text text="{dOrg>/statusText}"/></VBox>
+          </l:Grid>
+        </Panel>
+        <Panel headerText="Parent organization" visible="{= !${dOrg>/busy}}">
+          <l:Grid defaultSpan="XL4 L6 M6 S12">
+            <VBox><Label text="Business unit"/><Text text="{dOrg>/buText}"/></VBox>
+            <VBox><Label text="Location"/><Text text="{dOrg>/locText}"/></VBox>
+          </l:Grid>
+        </Panel>
+        <Panel headerText="Projects in this department">
+          <List items="{dOrg>/projects}" noDataText="{dOrg>/projectsEmpty}">
+            <StandardListItem title="{dOrg>projectLine}" type="Active" press=".onProjectPress"/>
+          </List>
+        </Panel>
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

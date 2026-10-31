@@ -15,5 +15,8 @@ mta_archives/
 # Other
 .DS_Store
 
+# Sprint 17 - private document store (dev default; NEVER commit)
+document-store/
+
 # @cap-js/cds-typer
 @cds-models

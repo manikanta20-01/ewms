@@ -1,0 +1,80 @@
+{
+  "_comment": "EWMS application shell (Sprint 26). Freestyle standard SAPUI5; ODataModel V4 is created programmatically in Component.js because the local dev auth user (mocked CAP users) is known only at runtime.",
+  "sap.app": {
+    "id": "ewms.EWMS",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": { "version": "1.0.0" },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "dataSources": {}
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": { "icon": "sap-icon://employee" }
+  },
+  "sap.ui5": {
+    "rootView": {
+      "viewName": "ewms.EWMS.view.Main",
+      "type": "XML",
+      "async": true,
+      "id": "main"
+    },
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": { "sap.m": {}, "sap.f": {}, "sap.ui.layout": {} }
+    },
+    "models": {
+      "i18n": { "type": "sap.ui.model.resource.ResourceModel", "settings": { "bundleName": "ewms.EWMS.i18n.i18n" } },
+      "app": { "type": "sap.ui.model.json.JSONModel", "settings": {} }
+    },
+    "routing": {
+      "config": {
+        "routerClass": "sap.f.routing.Router",
+        "viewType": "XML",
+        "viewPath": "ewms.EWMS.view",
+        "async": true,
+        "controlAggregation": "midColumnPages",
+        "controlId": "fcl"
+      },
+      "routes": [
+        { "pattern": "", "name": "home", "target": "home" },
+        { "pattern": "employees", "name": "employees", "target": "employees" },
+        { "pattern": "employees/{id}", "name": "employeeDetail", "target": "employeeDetail" },
+        { "pattern": "org", "name": "org", "target": "org" },
+        { "pattern": "org/{id}", "name": "orgDetail", "target": "orgDetail" },
+        { "pattern": "projects", "name": "projects", "target": "projects" },
+        { "pattern": "projects/{id}", "name": "projectDetail", "target": "projectDetail" },
+        { "pattern": "teams", "name": "teams", "target": "teams" },
+        { "pattern": "teams/{id}", "name": "teamDetail", "target": "teamDetail" },
+        { "pattern": "attendance", "name": "attendance", "target": "attendance" },
+        { "pattern": "attendance/{id}", "name": "attendanceDetail", "target": "attendanceDetail" },
+        { "pattern": "leave", "name": "leave", "target": "leave" },
+        { "pattern": "leave/{id}", "name": "leaveDetail", "target": "leaveDetail" },
+        { "pattern": "timesheets", "name": "timesheets", "target": "timesheets" },
+        { "pattern": "timesheets/{id}", "name": "timesheetDetail", "target": "timesheetDetail" },
+        { "pattern": "shifts", "name": "shifts", "target": "shifts" },
+        { "pattern": "geo", "name": "geo", "target": "geo" }
+      ],
+      "targets": {
+        "home": { "viewName": "Home", "transition": "slide" },
+        "employees": { "viewName": "EmployeeList", "transition": "slide" },
+        "employeeDetail": { "viewName": "EmployeeDetail", "transition": "slide", "controlAggregation": "endColumnPages" },
+        "org": { "viewName": "OrgList", "transition": "slide" },
+        "orgDetail": { "viewName": "OrgDetail", "transition": "slide", "controlAggregation": "endColumnPages" },
+        "projects": { "viewName": "ProjectList", "transition": "slide" },
+        "projectDetail": { "viewName": "ProjectDetail", "transition": "slide", "controlAggregation": "endColumnPages" },
+        "teams": { "viewName": "TeamList", "transition": "slide" },
+        "teamDetail": { "viewName": "TeamDetail", "transition": "slide", "controlAggregation": "endColumnPages" },
+        "attendance": { "viewName": "AttendanceList", "transition": "slide" },
+        "attendanceDetail": { "viewName": "AttendanceDetail", "transition": "slide", "controlAggregation": "endColumnPages" },
+        "leave": { "viewName": "LeaveList", "transition": "slide" },
+        "leaveDetail": { "viewName": "LeaveDetail", "transition": "slide", "controlAggregation": "endColumnPages" },
+        "timesheets": { "viewName": "TimesheetList", "transition": "slide" },
+        "timesheetDetail": { "viewName": "TimesheetDetail", "transition": "slide", "controlAggregation": "endColumnPages" },
+        "shifts": { "viewName": "Shifts", "transition": "slide" },
+        "geo": { "viewName": "GeoEvidence", "transition": "slide" }
+      }
+    }
+  }
+}

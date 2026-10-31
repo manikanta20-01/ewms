@@ -1,0 +1,32 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:l="sap.ui.layout"
+          controllerName="ewms.EWMS.controller.TeamDetail">
+  <!-- Sprint 27 - Team detail: fields + assigned members.
+       Member list uses the real EmployeeAssignments rows (HR/manager
+       roles only per backend @restrict; other roles see the real 403
+       message, never fake members). -->
+  <Page id="teamDetailPage" title="Team — {dTeam>/team/teamCode}"
+        showNavButton="true" navButtonPress=".onNavBack">
+    <content>
+      <VBox class="sapUiSmallMargin">
+        <MessageStrip visible="{dTeam>/error}" type="Error" showIcon="true" text="{dTeam>/errorText}"/>
+        <BusyIndicator visible="{dTeam>/busy}"/>
+        <Panel headerText="Team" visible="{= !${dTeam>/busy}}">
+          <l:Grid defaultSpan="XL4 L6 M6 S12">
+            <VBox><Label text="Code"/><Text text="{dTeam>/team/teamCode}"/></VBox>
+            <VBox><Label text="Name"/><Text text="{dTeam>/team/teamName}"/></VBox>
+            <VBox><Label text="Description"/><Text text="{dTeam>/team/description}"/></VBox>
+            <VBox><Label text="Status"/><Text text="{dTeam>/statusText}"/></VBox>
+            <VBox><Label text="Project"/><Text text="{dTeam>/projectText}"/></VBox>
+          </l:Grid>
+        </Panel>
+        <Panel headerText="Members (from assignments)">
+          <List items="{dTeam>/members}" noDataText="{dTeam>/membersEmpty}">
+            <StandardListItem
+              title="{dTeam>memberTitle}"
+              description="{dTeam>memberDescr}"/>
+          </List>
+        </Panel>
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

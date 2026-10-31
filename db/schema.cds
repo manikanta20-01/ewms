@@ -29,6 +29,30 @@ using from './attendance/overtime';
 using from './attendance/shift-assignment';
 using from './attendance/workSchedule';
 
+// SPRINT 16 - Geo Tracking & Geo-Fencing (references Employee,
+// Attendance and organization Location master data)
+using from './geo/geo';
+
+// SPRINT 17 - Documents & Compliance (requirement configuration;
+// documents themselves stay in the employee domain)
+using from './compliance/compliance';
+
+// SPRINT 18 - Employee Engagement (surveys, suggestions, kudos)
+using from './engagement/engagement';
+
+// SPRINT 19 - HR Policy Management (policy identity, versions,
+// employee acknowledgments; reuses Employee + Organization only)
+using from './hr-policy/hr-policy';
+
+// SPRINT 20 - HR Support / Helpdesk (tickets, comments, event
+// history, configurable SLA targets; reuses Employee + Document)
+using from './helpdesk/helpdesk';
+
+// SPRINT 21 - Exit Management (separation cases, clearance
+// checklist, linked exit documents, notice-period configuration;
+// reuses Employee + Assignment + Asset + Document + workflow)
+using from './exit/exit';
+
 using from './leave/leave-type';
 using from './leave/leave-request';
 using from './leave/leave-policy';
@@ -45,3 +69,22 @@ using from './payroll/payroll-process';
 using from './payroll/payroll-detail';
 using from './payroll/payslip';
 using from './payroll/payroll-history';
+
+// SPRINT 10 - Generic Workflow and Approval Engine
+using from './workflow/workflow-definition';
+using from './workflow/workflow-instance';
+
+// SPRINT 11/12 - Notification extension point (minimal core)
+using from './notification/notification';
+
+// SPRINT 12 - Offer Letter + Onboarding
+using from './recruitment/recruitment';
+
+// SPRINT 13 - Performance Management
+using from './performance/performance';
+
+// SPRINT 14 - Asset Management
+using from './asset/asset';
+
+// SPRINT 15 - Timesheet, Shift & Roster Integration
+using from './timesheet/timesheet';

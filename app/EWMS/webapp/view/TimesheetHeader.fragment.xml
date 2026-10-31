@@ -1,0 +1,30 @@
+<core:FragmentDefinition xmlns:core="sap.ui.core" xmlns="sap.m">
+  <!-- Sprint 28 - shared header block for the Timesheet detail page. -->
+  <VBox class="sapUiSmallMarginBottom">
+    <Title text="{tsd>/code} — {tsd>/statusText}" level="H2"/>
+    <Label text="Employee"/>
+    <Text text="{tsd>/employeeText}"/>
+    <Label text="Reporting period"/>
+    <Text text="{tsd>/periodText}"/>
+    <HBox>
+      <VBox class="sapUiSmallMarginEnd">
+        <Label text="Regular hours"/>
+        <Text text="{tsd>/regularHours}"/>
+      </VBox>
+      <VBox class="sapUiSmallMarginEnd">
+        <Label text="Overtime hours"/>
+        <Text text="{tsd>/overtimeHours}"/>
+      </VBox>
+      <VBox class="sapUiSmallMarginEnd">
+        <Label text="Submitted"/>
+        <Text text="{tsd>/submittedOn}"/>
+      </VBox>
+      <VBox>
+        <Label text="Reviewed"/>
+        <Text text="{tsd>/reviewedOn}"/>
+      </VBox>
+    </HBox>
+    <Label text="Reviewer comments"/>
+    <Text text="{tsd>/comments}" wrapping="true"/>
+  </VBox>
+</core:FragmentDefinition>

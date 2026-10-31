@@ -1,0 +1,32 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:l="sap.ui.layout"
+          controllerName="ewms.EWMS.controller.EmployeeDetail">
+  <Page id="empDetailPage" title="Employee — {detail>/employee/employeeCode}"
+        showNavButton="true"
+        navButtonPress=".onNavBack">
+    <content>
+      <VBox class="sapUiSmallMargin">
+        <MessageStrip visible="{detail>/error}" type="Error" showIcon="true" text="{detail>/errorText}"/>
+        <BusyIndicator visible="{detail>/busy}"/>
+        <Panel headerText="Summary" visible="{= !${detail>/busy}}">
+          <l:Grid defaultSpan="XL4 L6 M6 S12">
+            <VBox><Label text="Employee code"/><Text text="{detail>/employee/employeeCode}"/></VBox>
+            <VBox><Label text="Name"/><Text text="{detail>/employee/firstName} {detail>/employee/lastName}"/></VBox>
+            <VBox><Label text="Email"/><Text text="{detail>/employee/email}"/></VBox>
+            <VBox><Label text="Mobile"/><Text text="{detail>/employee/mobile}"/></VBox>
+            <VBox><Label text="Employment type"/><Text text="{detail>/employee/employmentType}"/></VBox>
+            <VBox><Label text="Work mode"/><Text text="{detail>/employee/workMode}"/></VBox>
+            <VBox><Label text="Status"/><Text text="{detail>/statusText}"/></VBox>
+            <VBox><Label text="Joined"/><Text text="{detail>/joinedText}"/></VBox>
+          </l:Grid>
+        </Panel>
+        <Panel headerText="Assignments">
+          <List items="{detail>/assignments}" noDataText="No active assignments recorded">
+            <StandardListItem
+              title="{detail>designation/designationName}"
+              description="{detail>assignmentLine}"/>
+          </List>
+        </Panel>
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

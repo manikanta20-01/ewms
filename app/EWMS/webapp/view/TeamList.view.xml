@@ -1,0 +1,52 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m"
+          controllerName="ewms.EWMS.controller.TeamList">
+  <!-- Sprint 27 - Team list. Teams are readable by every role; the
+       parent project name is joined client-side (cross-service). -->
+  <Page id="teamListPage" title="Teams" showNavButton="false">
+    <headerContent>
+      <Toolbar>
+        <SearchField id="teamSearch" width="16rem" placeholder="Search team"
+                     liveChange=".onSearch" search=".onSearch"/>
+        <ToolbarSpacer/>
+        <Button id="btnPrev" icon="sap-icon://navigation-left-arrow" press=".onPrevPage"/>
+        <Text text="{team>/pageLabel}" class="sapUiSmallMarginEnd"/>
+        <Button id="btnNext" icon="sap-icon://navigation-right-arrow" press=".onNextPage"/>
+      </Toolbar>
+    </headerContent>
+    <subHeader>
+      <Toolbar>
+        <MessageStrip visible="{team>/error}" type="Error" showIcon="true" text="{team>/errorText}"/>
+      </Toolbar>
+    </subHeader>
+    <content>
+      <Table id="teamTable"
+             items="{team>/rows}"
+             busyIndicatorDelay="0"
+             busy="{team>/busy}"
+             mode="None">
+        <columns>
+          <Column width="8rem"><Text text="Code"/></Column>
+          <Column width="14rem"><Text text="Team"/></Column>
+          <Column width="18rem"><Text text="Project"/></Column>
+          <Column width="8rem"><Text text="Status"/></Column>
+        </columns>
+        <items>
+          <ColumnListItem type="Active" press=".onTeamPress">
+            <cells>
+              <Text text="{team>teamCode}"/>
+              <Text text="{team>teamName}"/>
+              <Text text="{team>projectText}"/>
+              <Text text="{team>statusText}"/>
+            </cells>
+          </ColumnListItem>
+        </items>
+      </Table>
+    </content>
+    <footer>
+      <Toolbar>
+        <ToolbarSpacer/>
+        <Text text="{team>/footerLabel}"/>
+      </Toolbar>
+    </footer>
+  </Page>
+</mvc:View>

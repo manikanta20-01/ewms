@@ -1,0 +1,59 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:core="sap.ui.core"
+          controllerName="ewms.EWMS.controller.LeaveList">
+  <!-- Sprint 28 - Leave requests. Rows reflect exactly what the
+       backend grants the acting role (own rows for employees). -->
+  <Page id="leaveListPage" title="Leave" showNavButton="true"
+        navButtonPress=".onNavBack">
+    <headerContent>
+      <Toolbar>
+        <Button text="Apply for leave" icon="sap-icon://create" type="Emphasized"
+                press=".onOpenApply"/>
+        <ToolbarSpacer/>
+        <Text text="{lv>/pageLabel}"/>
+      </Toolbar>
+    </headerContent>
+    <subHeader>
+      <Toolbar>
+        <Label text="Status" class="sapUiSmallMarginEnd"/>
+        <Select id="lvStatusSel" width="12rem" forceSelection="false"
+                selectedKey="{lv>/filterStatus}" change=".onFilterChange">
+          <core:Item key="Draft" text="Draft"/>
+          <core:Item key="Pending" text="Pending approval"/>
+          <core:Item key="TeamApproved" text="Team approved"/>
+          <core:Item key="ProjectApproved" text="Project approved"/>
+          <core:Item key="HRApproved" text="HR approved"/>
+          <core:Item key="Rejected" text="Rejected"/>
+          <core:Item key="Cancelled" text="Cancelled"/>
+        </Select>
+      </Toolbar>
+    </subHeader>
+    <content>
+      <MessageStrip visible="{lv>/error}" type="Error" showIcon="true"
+                    text="{lv>/errorText}"/>
+      <Table id="lvTable" items="{lv>/rows}"
+             busyIndicatorDelay="0" busy="{lv>/busy}"
+             noDataText="No leave requests visible to your role">
+        <columns>
+          <Column width="10rem"><Text text="Number"/></Column>
+          <Column width="12rem"><Text text="Type"/></Column>
+          <Column width="10rem"><Text text="From"/></Column>
+          <Column width="10rem"><Text text="To"/></Column>
+          <Column width="7rem"><Text text="Days"/></Column>
+          <Column width="12rem"><Text text="Status"/></Column>
+        </columns>
+        <items>
+          <ColumnListItem type="Active" press=".onRowPress">
+            <cells>
+              <Text text="{lv>leaveNumber}"/>
+              <Text text="{lv>typeText}"/>
+              <Text text="{lv>fromDate}"/>
+              <Text text="{lv>toDate}"/>
+              <Text text="{lv>totalDays}"/>
+              <Text text="{lv>statusText}"/>
+            </cells>
+          </ColumnListItem>
+        </items>
+      </Table>
+    </content>
+  </Page>
+</mvc:View>

@@ -1,5 +1,6 @@
 const { required } = require("../../common/utils/validation");
 const { generateCode } = require("../../common/utils/code-generator");
+const { validateDelete } = require("../../common/utils/delete-validator");
 
 module.exports = (srv) => {
 

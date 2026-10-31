@@ -3,9 +3,13 @@ const { registerAuditHooks } = require("../common/utils/audit");
 
 module.exports = cds.service.impl(async function () {
   registerAuditHooks(this, {
+    // The list must use the SERVED entity short names (projections in
+    // attendance-service.cds). The db-style names "Attendance"/"Overtime"
+    // never matched a served entity, so those writes were silently not
+    // audited.
     include: [
-      "Attendance",
-      "Overtime",
+      "Attendances",
+      "Overtimes",
       "ShiftAssignments",
       "WorkSchedules",
       "Shifts",

@@ -1,0 +1,75 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" controllerName="ewms.EWMS.controller.GeoEvidence">
+  <!-- Sprint 28 - Geo-attendance EVIDENCE view. READ ONLY by design:
+       geofence evidence rows are written exclusively by the backend
+       geofence validator during check-in/check-out. This view NEVER
+       pretends GPS coordinates prove physical presence and never
+       sends coordinates itself - no tracking of any kind. -->
+  <Page id="geoPage" title="Geo-attendance (evidence)" showNavButton="false">
+    <content>
+      <IconTabBar id="geoTabs" expandable="false">
+        <items>
+          <IconTabFilter text="Location events" key="events">
+            <Toolbar>
+              <Label text="From"/>
+              <DatePicker id="geoFrom" value="{geo>/dateFrom}" change=".onFilterChange"/>
+              <Label text="To"/>
+              <DatePicker id="geoTo" value="{geo>/dateTo}" change=".onFilterChange"/>
+              <Button text="Clear" press=".onClearFilter"/>
+            </Toolbar>
+            <MessageStrip visible="{geo>/eventsError}" type="Error" showIcon="true" text="{geo>/eventsErrorText}"/>
+            <Table items="{geo>/events}"
+                   noDataText="No location events visible for your role (or none recorded)"
+                   busyIndicatorDelay="0" busy="{geo>/busy}">
+              <columns>
+                <Column width="11rem"><Text text="Timestamp"/></Column>
+                <Column width="13rem"><Text text="Employee"/></Column>
+                <Column width="8rem"><Text text="Event"/></Column>
+                <Column width="8rem"><Text text="Result"/></Column>
+                <Column width="9rem"><Text text="Distance (m)"/></Column>
+                <Column width="20rem"><Text text="Reason (backend wording)"/></Column>
+              </columns>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{geo>eventTimestamp}"/>
+                  <Text text="{geo>employeeText}"/>
+                  <Text text="{geo>eventTypeText}"/>
+                  <Text text="{geo>resultText}"/>
+                  <Text text="{geo>distanceText}"/>
+                  <Text text="{geo>reason}" wrapping="true"/>
+                </cells>
+              </ColumnListItem>
+            </Table>
+          </IconTabFilter>
+          <IconTabFilter text="Geofences" key="fences">
+            <MessageStrip visible="{geo>/fencesError}" type="Error" showIcon="true" text="{geo>/fencesErrorText}"/>
+            <Table items="{geo>/fences}" noDataText="No geofences visible for your role">
+              <columns>
+                <Column width="8rem"><Text text="Code"/></Column>
+                <Column width="13rem"><Text text="Name"/></Column>
+                <Column width="8rem"><Text text="Radius (m)"/></Column>
+                <Column width="8rem"><Text text="Status"/></Column>
+                <Column width="9rem"><Text text="From"/></Column>
+                <Column width="9rem"><Text text="To"/></Column>
+              </columns>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{geo>geofenceCode}"/>
+                  <Text text="{geo>name}"/>
+                  <Text text="{geo>radiusText}"/>
+                  <Text text="{geo>statusText}"/>
+                  <Text text="{geo>effectiveFrom}"/>
+                  <Text text="{geo>effectiveTo}"/>
+                </cells>
+              </ColumnListItem>
+            </Table>
+          </IconTabFilter>
+        </items>
+      </IconTabBar>
+    </content>
+    <footer>
+      <Toolbar>
+        <Text text="Evidence rows record what the backend validator decided at check-in/out. Distances and statuses come from the validation, not from the browser. No continuous tracking: coordinates are captured only inside the optional check-in toggle on the Attendance page."/>
+      </Toolbar>
+    </footer>
+  </Page>
+</mvc:View>

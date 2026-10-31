@@ -1,0 +1,56 @@
+<core:FragmentDefinition xmlns:core="sap.ui.core"
+                        xmlns="sap.m"
+                        fragmentName="ewms.EWMS.view.ApplyLeaveDialog"
+                        type="XML">
+  <!-- Sprint 28 - Apply-for-leave dialog. The backend CREATE handler
+       validates the real business rules (overlap, active leave type,
+       half-day day count); the dialog only collects the inputs. -->
+  <Dialog id="applyLeaveDialog" title="Apply for leave"
+          contentWidth="28rem">
+    <content>
+      <VBox class="sapUiSmallMargin">
+        <Label text="Employee" wrapping="true" width="100%"/>
+        <ComboBox width="100%" items="{lv>/employeeOptions}"
+                  selectedKey="{lv>/applyForm/employee_ID}">
+          <items><core:Item key="{lv>ID}" text="{lv>text}"/></items>
+        </ComboBox>
+        <Label text="Leave type" wrapping="true" width="100%" class="sapUiTinyMarginTop"/>
+        <ComboBox width="100%" items="{lv>/leaveTypes}"
+                  selectedKey="{lv>/applyForm/leaveType_ID}">
+          <items><core:Item key="{lv>ID}" text="{lv>text}"/></items>
+        </ComboBox>
+        <Label text="From date" wrapping="true" width="100%" class="sapUiTinyMarginTop"/>
+        <DatePicker width="100%" valueFormat="yyyy-MM-dd"
+                    displayFormat="yyyy-MM-dd"
+                    value="{lv>/applyForm/fromDate}"/>
+        <CheckBox text="Half day" selected="{lv>/applyForm/halfDay}"
+                  class="sapUiTinyMarginTop"/>
+        <Label text="Half-day range" wrapping="true" width="100%"
+               class="sapUiTinyMarginTop"
+               visible="{lv>/applyForm/halfDay}"/>
+        <Select width="80%" selectedKey="{lv>/applyForm/halfDayType}"
+                visible="{lv>/applyForm/halfDay}">
+          <core:Item key="FirstHalf" text="First half"/>
+          <core:Item key="SecondHalf" text="Second half"/>
+        </Select>
+        <Label text="To date" wrapping="true" width="100%"
+               class="sapUiTinyMarginTop"
+               visible="{= !${lv>/applyForm/halfDay}}"/>
+        <DatePicker width="100%" valueFormat="yyyy-MM-dd"
+                    displayFormat="yyyy-MM-dd" value="{lv>/applyForm/toDate}"
+                    visible="{= !${lv>/applyForm/halfDay}}"/>
+        <Label text="Reason" wrapping="true" width="100%" class="sapUiTinyMarginTop"/>
+        <TextArea width="100%" rows="3" value="{lv>/applyForm/reason}"/>
+        <CheckBox text="Emergency" selected="{lv>/applyForm/emergency}"
+                  class="sapUiTinyMarginTop"/>
+        <MessageStrip visible="{lv>/applyError}" type="Error" showIcon="true"
+                      text="{lv>/applyError}" class="sapUiSmallMarginTop"/>
+      </VBox>
+    </content>
+    <buttons>
+      <Button text="File request" type="Emphasized" press=".onConfirmApply"
+              busy="{lv>/applyBusy}"/>
+      <Button text="Cancel" press=".onCloseApply"/>
+    </buttons>
+  </Dialog>
+</core:FragmentDefinition>

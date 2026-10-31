@@ -1,0 +1,56 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" controllerName="ewms.EWMS.controller.TimesheetList">
+  <!-- Sprint 28 - Timesheet list. Real backend rows only. Status totals
+       and lifecycle shaping are the backend's job, never re-done here. -->
+  <Page id="tsListPage" title="Timesheets" showNavButton="false">
+    <headerContent>
+      <Toolbar>
+        <Button id="tsNew" text="New timesheet" press=".onCreate"/>
+        <ToolbarSpacer/>
+        <Button id="btnPrev" icon="sap-icon://navigation-left-arrow" press=".onPrevPage"/>
+        <Text text="{ts>/pageLabel}"/>
+        <Button id="btnNext" icon="sap-icon://navigation-right-arrow" press=".onNextPage"/>
+      </Toolbar>
+    </headerContent>
+    <subHeader>
+      <Toolbar>
+        <MessageStrip visible="{ts>/error}" type="Error" showIcon="true" text="{ts>/errorText}"/>
+      </Toolbar>
+    </subHeader>
+    <content>
+      <Table id="tsTable"
+             items="{ts>/rows}"
+             busyIndicatorDelay="0"
+             busy="{ts>/busy}"
+             mode="None">
+        <columns>
+          <Column width="10rem"><Text text="Sheet"/></Column>
+          <Column width="16rem"><Text text="Employee"/></Column>
+          <Column width="9rem"><Text text="From"/></Column>
+          <Column width="9rem"><Text text="To"/></Column>
+          <Column width="7rem"><Text text="Regular hours"/></Column>
+          <Column width="7rem"><Text text="OT hours"/></Column>
+          <Column width="7rem"><Text text="Status"/></Column>
+        </columns>
+        <items>
+          <ColumnListItem type="Active" press=".onSheetPress">
+            <cells>
+              <Text text="{ts>sheetNumber}"/>
+              <Text text="{ts>employeeText}"/>
+              <Text text="{ts>fromDate}"/>
+              <Text text="{ts>toDate}"/>
+              <Text text="{ts>regularHours}"/>
+              <Text text="{ts>overtimeHours}"/>
+              <Text text="{ts>statusText}"/>
+            </cells>
+          </ColumnListItem>
+        </items>
+      </Table>
+    </content>
+    <footer>
+      <Toolbar>
+        <ToolbarSpacer/>
+        <Text text="{ts>/footerLabel}"/>
+      </Toolbar>
+    </footer>
+  </Page>
+</mvc:View>

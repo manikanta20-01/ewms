@@ -33,10 +33,6 @@ module.exports = cds.service.impl(async function () {
     ],
   });
 
-  this.on("ProcessPayroll", PayrollPeriods, async (req) => {
-    return await processPayroll(req);
-  });
-
   // ------------------------------------------------------------------
   // BOUND ACTIONS (Bound to PayrollPeriods)
   // ------------------------------------------------------------------

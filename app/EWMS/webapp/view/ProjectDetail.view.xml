@@ -1,0 +1,33 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:l="sap.ui.layout"
+          controllerName="ewms.EWMS.controller.ProjectDetail">
+  <!-- Sprint 27 - Project detail: fields + linked teams. -->
+  <Page id="projDetailPage" title="Project — {dProj>/proj/projectCode}"
+        showNavButton="true" navButtonPress=".onNavBack">
+    <content>
+      <VBox class="sapUiSmallMargin">
+        <MessageStrip visible="{dProj>/error}" type="Error" showIcon="true" text="{dProj>/errorText}"/>
+        <BusyIndicator visible="{dProj>/busy}"/>
+        <Panel headerText="Project" visible="{= !${dProj>/busy}}">
+          <l:Grid defaultSpan="XL4 L6 M6 S12">
+            <VBox><Label text="Code"/><Text text="{dProj>/proj/projectCode}"/></VBox>
+            <VBox><Label text="Name"/><Text text="{dProj>/proj/projectName}"/></VBox>
+            <VBox><Label text="Client"/><Text text="{dProj>/proj/clientName}"/></VBox>
+            <VBox><Label text="Status"/><Text text="{dProj>/statusText}"/></VBox>
+            <VBox><Label text="Description"/><Text text="{dProj>/proj/description}"/></VBox>
+            <VBox><Label text="Department"/><Text text="{dProj>/deptText}"/></VBox>
+            <VBox><Label text="Planned start"/><Text text="{dProj>/plannedStartText}"/></VBox>
+            <VBox><Label text="Planned end"/><Text text="{dProj>/plannedEndText}"/></VBox>
+            <VBox><Label text="Actual start"/><Text text="{dProj>/actualStartText}"/></VBox>
+            <VBox><Label text="Actual end"/><Text text="{dProj>/actualEndText}"/></VBox>
+            <VBox><Label text="Budget"/><Text text="{dProj>/budgetText}"/></VBox>
+          </l:Grid>
+        </Panel>
+        <Panel headerText="Teams in this project">
+          <List items="{dProj>/teams}" noDataText="{dProj>/teamsEmpty}">
+            <StandardListItem title="{dProj>teamText}" type="Active" press=".onTeamPress"/>
+          </List>
+        </Panel>
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

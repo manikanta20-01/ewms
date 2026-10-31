@@ -1,0 +1,3 @@
+ID,geofenceCode,name,latitude,longitude,radiusMeters,status,effectiveFrom,effectiveTo,description
+30000000-0000-0000-0000-000000000001,GF0001,Head Office Bengaluru,12.971600,77.594566,200,Active,2026-01-01,,Head office entrance geofence
+30000000-0000-0000-0000-000000000002,GF0002,Electronics City Site,12.845200,77.660200,150,Active,2026-01-01,,Client site geofence

@@ -4,11 +4,22 @@ const { SELECT } = cds.ql;
 const { generateCode } = require("../../common/utils/code-generator");
 
 module.exports = (srv) => {
-  const { Shift } = srv.entities;
+  // Bind to the SERVED entity name "Shifts" (see handlers/attendance.js
+  // for the reasoning). The db entity name "Shift" never matched a
+  // dispatched OData request, silently disabling the shift validations.
+  const { Shifts } = srv.entities;
+
+  // Queries against OTHER entities of the attendance module that are
+  // also projections of THIS service use the qualified db entity name
+  // (the exact db table names - "attendance" lowercase was never a
+  // valid entity and would 500 on every delete).
+  const ShiftAssignmentEntity = "ewms.db.attendance.ShiftAssignment";
+  const AttendanceEntity = "ewms.db.attendance.Attendance";
+  const WorkScheduleEntity = "ewms.db.attendance.WorkSchedule";
   // ==================
   // CREATE
   // ==================
-  srv.before("CREATE", "Shift", async (req) => {
+  srv.before("CREATE", Shifts, async (req) => {
     const tx = cds.transaction(req);
 
     if (!req.data.name) return req.error(400, "Shiftname is required");
@@ -31,21 +42,21 @@ module.exports = (srv) => {
       return req.error(400, "Weekly hours must be greater than zero");
 
     const exisitingShift = await tx.run(
-      SELECT.one.from(Shift).where({
+      SELECT.one.from(Shifts).where({
         name: req.data.name,
       }),
     );
 
     if (exisitingShift) return req.error(400, "Shift Name already exists.");
 
-    req.data.shiftCode = await generateCode(req, Shift, "shiftCode", "SH", 5);
+    req.data.shiftCode = await generateCode(req, Shifts, "shiftCode", "SH", 5);
   });
 
   // ==================
   // UPDATE
   // ==================
 
-  srv.before("UPDATE", "Shift", async (req) => {
+  srv.before("UPDATE", Shifts, async (req) => {
     const tx = cds.transaction(req);
 
     if ("shiftCode" in req.data) {
@@ -81,7 +92,7 @@ module.exports = (srv) => {
 
     if (req.data.name) {
       const exisitingShift = await tx.run(
-        SELECT.one.from(Shift).where({
+        SELECT.one.from(Shifts).where({
           name: req.data.name,
         }),
       );
@@ -96,13 +107,15 @@ module.exports = (srv) => {
   // DELETE
   // ==================
 
-  srv.before("DELETE", "Shift", async (req) => {
+  srv.before("DELETE", Shifts, async (req) => {
     const tx = cds.transaction(req);
+
+    if (!req.data.ID) return req.error(400, "Shift ID is required");
 
     // check shift assignment
     const shiftAssigment = await tx.run(
       SELECT.one
-        .from("ewms.db.attendance.ShiftAssignment")
+        .from(ShiftAssignmentEntity)
         .where({ shift_ID: req.data.ID }),
     );
 
@@ -116,7 +129,7 @@ module.exports = (srv) => {
     // check attendance
     const attendance = await tx.run(
       SELECT.one
-        .from("ewms.db.attendance.attendance")
+        .from(AttendanceEntity)
         .where({ shift_ID: req.data.ID }),
     );
 
@@ -127,7 +140,7 @@ module.exports = (srv) => {
     // check workschedule
     const workSchedule = await tx.run(
       SELECT.one
-        .from("ewms.db.attendance.workSchedule")
+        .from(WorkScheduleEntity)
         .where({ shift_ID: req.data.ID }),
     );
 

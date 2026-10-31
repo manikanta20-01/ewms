@@ -1,0 +1,54 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m"
+          controllerName="ewms.EWMS.controller.ProjectList">
+  <!-- Sprint 27 - Project list. Projects are readable by every role;
+       department names are joined client-side (cross-service). -->
+  <Page id="projListPage" title="Projects" showNavButton="false">
+    <headerContent>
+      <Toolbar>
+        <SearchField id="projSearch" width="16rem" placeholder="Search project"
+                     liveChange=".onSearch" search=".onSearch"/>
+        <ToolbarSpacer/>
+        <Button id="btnPrev" icon="sap-icon://navigation-left-arrow" press=".onPrevPage"/>
+        <Text text="{proj>/pageLabel}" class="sapUiSmallMarginEnd"/>
+        <Button id="btnNext" icon="sap-icon://navigation-right-arrow" press=".onNextPage"/>
+      </Toolbar>
+    </headerContent>
+    <subHeader>
+      <Toolbar>
+        <MessageStrip visible="{proj>/error}" type="Error" showIcon="true" text="{proj>/errorText}"/>
+      </Toolbar>
+    </subHeader>
+    <content>
+      <Table id="projTable"
+             items="{proj>/rows}"
+             busyIndicatorDelay="0"
+             busy="{proj>/busy}"
+             mode="None">
+        <columns>
+          <Column width="8rem"><Text text="Code"/></Column>
+          <Column width="14rem"><Text text="Project"/></Column>
+          <Column width="12rem"><Text text="Client"/></Column>
+          <Column width="16rem"><Text text="Department"/></Column>
+          <Column width="8rem"><Text text="Status"/></Column>
+        </columns>
+        <items>
+          <ColumnListItem type="Active" press=".onProjectPress">
+            <cells>
+              <Text text="{proj>projectCode}"/>
+              <Text text="{proj>projectName}"/>
+              <Text text="{proj>clientName}"/>
+              <Text text="{proj>departmentText}"/>
+              <Text text="{proj>statusText}"/>
+            </cells>
+          </ColumnListItem>
+        </items>
+      </Table>
+    </content>
+    <footer>
+      <Toolbar>
+        <ToolbarSpacer/>
+        <Text text="{proj>/footerLabel}"/>
+      </Toolbar>
+    </footer>
+  </Page>
+</mvc:View>

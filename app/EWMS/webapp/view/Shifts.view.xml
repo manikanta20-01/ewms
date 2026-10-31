@@ -1,0 +1,115 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" controllerName="ewms.EWMS.controller.Shifts">
+  <!-- Sprint 28 - Shifts & roster. Four real backend areas in IconTabBar;
+       every area has explicit error + empty handling, nothing invented. -->
+  <Page id="shiftsPage" title="Shifts &amp; Roster" showNavButton="false">
+    <headerContent>
+      <Toolbar>
+        <Button icon="sap-icon://refresh" press=".onRefresh" tooltip="Reload"/>
+      </Toolbar>
+    </headerContent>
+    <content>
+      <IconTabBar id="shiftTabs" expandable="false">
+        <items>
+          <IconTabFilter text="Shifts" key="shifts">
+            <MessageStrip visible="{shf>/shiftsError}" type="Error" showIcon="true" text="{shf>/shiftsErrorText}"/>
+            <List items="{shf>/rows}" noDataText="No shifts found (or you have no permission to list them)">
+              <columns>
+                <Column width="8rem"><Text text="Code"/></Column>
+                <Column width="12rem"><Text text="Shift name"/></Column>
+                <Column width="7rem"><Text text="Start"/></Column>
+                <Column width="7rem"><Text text="End"/></Column>
+                <Column width="7rem"><Text text="Grace in"/></Column>
+                <Column width="7rem"><Text text="Grace out"/></Column>
+                <Column width="8rem"><Text text="Break"/></Column>
+                <Column width="6rem"><Text text="Night"/></Column>
+                <Column width="8rem"><Text text="Status"/></Column>
+              </columns>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{shf>shiftCode}"/>
+                  <Text text="{shf>name}"/>
+                  <Text text="{shf>startTime}"/>
+                  <Text text="{shf>endTime}"/>
+                  <Text text="{shf>graceIn}"/>
+                  <Text text="{shf>graceOut}"/>
+                  <Text text="{shf>breakMin}"/>
+                  <Text text="{shf>nightShift}"/>
+                  <Text text="{shf>statusText}"/>
+                </cells>
+              </ColumnListItem>
+            </List>
+          </IconTabFilter>
+
+          <IconTabFilter text="Shift assignments" key="assign">
+            <MessageStrip visible="{shf>/assignError}" type="Error" showIcon="true" text="{shf>/assignErrorText}"/>
+            <List items="{shf>/assignments}"
+                  noDataText="No shift assignments visible for your role (or none exist)">
+              <columns>
+                <Column width="16rem"><Text text="Employee"/></Column>
+                <Column width="14rem"><Text text="Shift"/></Column>
+                <Column width="10rem"><Text text="From"/></Column>
+                <Column width="10rem"><Text text="To"/></Column>
+              </columns>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{shf>employeeText}"/>
+                  <Text text="{shf>shiftText}"/>
+                  <Text text="{shf>effectiveFrom}"/>
+                  <Text text="{shf>effectiveTo}"/>
+                </cells>
+              </ColumnListItem>
+            </List>
+          </IconTabFilter>
+
+          <IconTabFilter text="Roster (work schedules)" key="sched">
+            <Toolbar>
+              <DatePicker id="schedDate" value="{shf>/schedDate}" change=".onSchedDateChange" placeholder="Filter by date (optional)"/>
+              <Button text="Clear" press=".onClearSchedDate"/>
+            </Toolbar>
+            <MessageStrip visible="{shf>/schedError}" type="Error" showIcon="true" text="{shf>/schedErrorText}"/>
+            <List items="{shf>/schedules}"
+                  noDataText="No work schedules match (or your role cannot list them)">
+              <columns>
+                <Column width="10rem"><Text text="Date"/></Column>
+                <Column width="16rem"><Text text="Employee"/></Column>
+                <Column width="14rem"><Text text="Assigned shift"/></Column>
+                <Column width="20rem"><Text text="Remarks"/></Column>
+              </columns>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{shf>scheduleDate}"/>
+                  <Text text="{shf>employeeText}"/>
+                  <Text text="{shf>shiftText}"/>
+                  <Text text="{shf>remarks}"/>
+                </cells>
+              </ColumnListItem>
+            </List>
+          </IconTabFilter>
+
+          <IconTabFilter text="Holidays" key="hol">
+            <MessageStrip visible="{shf>/holidayError}" type="Error" showIcon="true" text="{shf>/holidayErrorText}"/>
+            <List items="{shf>/holidays}" noDataText="No holidays on file">
+              <columns>
+                <Column width="10rem"><Text text="Date"/></Column>
+                <Column width="14rem"><Text text="Holiday"/></Column>
+                <Column width="20rem"><Text text="Description"/></Column>
+              </columns>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{shf>date}"/>
+                  <Text text="{shf>name}"/>
+                  <Text text="{shf>description}"/>
+                </cells>
+              </ColumnListItem>
+            </List>
+          </IconTabFilter>
+        </items>
+      </IconTabBar>
+    </content>
+    <footer>
+      <Toolbar>
+        <Text text="Shifts, assignments, roster and holidays read live from the CAP backend. Roles scope what is visible."/>
+      </Toolbar>
+    </footer>
+  </Page>
+</mvc:View>

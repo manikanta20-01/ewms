@@ -1,0 +1,19 @@
+<core:FragmentDefinition xmlns:core="sap.ui.core" xmlns="sap.m" xmlns:l="sap.ui.layout">
+  <!-- Sprint 28 - one comments dialog reused by Approve / Reject /
+       Cancel. Required reason is enforced for Reject here AND by the
+       backend; the backend answer is always the final word. -->
+  <Dialog id="tsCommentsDlg" title="{tsd>/commentTitle}" contentWidth="26rem">
+    <content>
+      <l:VerticalLayout class="sapUiSmallMargin" width="100%">
+        <MessageStrip visible="{= ${tsd>/commentError} ? true : false }"
+                     type="Error" showIcon="true" text="{tsd>/commentError}"/>
+        <Label text="Comments"/>
+        <TextArea value="{tsd>/commentValue}" rows="4" width="100%"/>
+      </l:VerticalLayout>
+    </content>
+    <buttons>
+      <Button text="Cancel" press=".onCommentsCancel"/>
+      <Button text="Confirm" type="Emphasized" press=".onCommentsConfirm" enabled="{=!${tsd>/busy}}"/>
+    </buttons>
+  </Dialog>
+</core:FragmentDefinition>

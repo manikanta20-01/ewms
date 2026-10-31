@@ -9,7 +9,10 @@ module.exports = async (srv) => {
   // ==================
   // CREATE
   // ==================
-  srv.before("CREATE", "HolidayCalendar", async (req) => {
+  // Bind to the SERVED entity name "HolidayCalendars" (see
+  // handlers/attendance.js for the reasoning) - the db entity name
+  // never matched a dispatched OData request.
+  srv.before("CREATE", "HolidayCalendars", async (req) => {
     const tx = cds.transaction(req);
 
     if (!req.data.name) return req.error(400, "Holiday Name is required");
@@ -47,7 +50,7 @@ module.exports = async (srv) => {
   // UPDATE
   // ==================
 
-  srv.before("UPDATE", "HolidayCalendar", async (req) => {
+  srv.before("UPDATE", "HolidayCalendars", async (req) => {
     const tx = cds.transaction(req);
 
     if ("calendarCode" in req.data)
@@ -63,7 +66,10 @@ module.exports = async (srv) => {
         SELECT.one.from(HolidayCalendar).where({ ID: req.data.ID }),
       );
       const name = req.data.name ?? current.name;
-      const year = req.data.name ?? current.year;
+      // Typo fix: the duplicate check previously merged req.data.name
+      // into the YEAR, so edits that only changed the year compared the
+      // new year against the old name and never detected real duplicates.
+      const year = req.data.year ?? current.year;
       const country = req.data.country ?? current.country;
 
       const exisitingCalendar = await tx.run(
@@ -87,7 +93,7 @@ module.exports = async (srv) => {
   // DELETE
   // ==================
 
-  srv.before("DELETE", "HolidayCalendar", async (req) => {
+  srv.before("DELETE", "HolidayCalendars", async (req) => {
     const tx = cds.transaction(req);
 
     const holiday = await tx.run(

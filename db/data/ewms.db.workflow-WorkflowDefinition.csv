@@ -1,0 +1,6 @@
+ID,definitionCode,name,description,businessObjectType,approvalType,allowSelfApproval,status
+f1000000-0000-0000-0000-000000000001,WF-LEAVE-STD,Standard Leave Approval,Generic two-level approval for leave requests,ewms.db.leave.LeaveRequest,SingleSequential,false,Active
+f1000000-0000-0000-0000-000000000002,WF-OFFER-STD,Standard Offer Approval,Generic HR approval for offer letters,ewms.db.recruitment.Offer,SingleSequential,false,Active
+f1000000-0000-0000-0000-000000000003,WF-REVIEW-STD,Standard Performance Review Approval,Generic HR approval for performance reviews,ewms.db.performance.PerformanceReview,SingleSequential,false,Active
+f1000000-0000-0000-0000-000000000004,WF-TIMESHEET-STD,Standard Timesheet Approval,Generic two-level approval for timesheets (manager then HR),ewms.db.timesheet.Timesheet,SingleSequential,false,Active
+f1000000-0000-0000-0000-000000000005,WF-EXIT-STD,Standard Exit Approval,Generic manager-then-HR approval for exit cases (Sprint 21),ewms.db.exit.ExitCase,SingleSequential,false,Active
